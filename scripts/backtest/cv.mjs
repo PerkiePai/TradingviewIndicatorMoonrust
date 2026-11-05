@@ -36,12 +36,14 @@ export function selectFinal(bars, features, sessions, opts) {
   return choose(bars, features, sessions, opts);
 }
 
+const usd = (x) => `${x < 0 ? '-' : ''}$${Math.abs(x).toFixed(2)}`;
+
 export function verdict({ base, stress, randomPctBelow }) {
   const checks = [
     { name: 'Profit on at least 3 test days', passed: base.profitableFolds >= 3, detail: `${base.profitableFolds} of ${base.folds.length} profitable` },
     { name: 'No failed test day', passed: base.failedFolds === 0, detail: `${base.failedFolds} failed` },
     { name: 'Beats 95% of random runs', passed: randomPctBelow >= 95, detail: `${randomPctBelow}% of random runs below` },
-    { name: 'Positive at the $0.32 spread', passed: stress.combinedNet > 0, detail: `combined net ${stress.combinedNet}` },
+    { name: 'Positive at the $0.32 spread', passed: stress.combinedNet > 0, detail: `combined net ${usd(stress.combinedNet)}` },
   ];
   return { label: checks.every((c) => c.passed) ? 'demo candidate' : 'no demonstrated edge', checks };
 }

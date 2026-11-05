@@ -9,7 +9,7 @@ Data: `data/XAUUSD_EIGHTCAP_1m.csv`, 5273 one-minute bars in 4 sessions. Grid: 1
 - FAIL: Profit on at least 3 test days (2 of 4 profitable)
 - FAIL: No failed test day (1 failed)
 - FAIL: Beats 95% of random runs (71.8% of random runs below)
-- FAIL: Positive at the $0.32 spread (combined net -0.5900000000001455)
+- FAIL: Positive at the $0.32 spread (combined net -$0.59)
 
 ## Limits
 

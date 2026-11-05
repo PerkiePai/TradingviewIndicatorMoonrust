@@ -1518,7 +1518,7 @@
       {
         "name": "Positive at the $0.32 spread",
         "passed": false,
-        "detail": "combined net -0.5900000000001455"
+        "detail": "combined net -$0.59"
       }
     ]
   }

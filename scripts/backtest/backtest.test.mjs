@@ -8,7 +8,9 @@ import { excursionStudy } from './excursion.mjs';
 import { ema, rsi, atr, resample, buildFeatures } from './indicators.mjs';
 import { renderReport } from './report.mjs';
 import { run as runBacktest } from '../backtest.mjs';
-import { existsSync } from 'node:fs';
+import { readFileSync, existsSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const near = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) <= eps, `${a} !~ ${b}`);
@@ -464,6 +466,28 @@ if (existsSync(repoCsv)) {
   assert.ok(Math.abs(out.results.excursion.count - 58) <= 5, `signals ${out.results.excursion.count}`);
   assert.ok(existsSync(out.mdPath) && existsSync(out.jsonPath));
   assert.deepEqual(runBacktest().results, out.results);
+  const mdText = readFileSync(out.mdPath, 'utf8');
+  assert.doesNotMatch(mdText, /\d\.\d{4,}/);                        // no raw float noise
+} else {
+  console.log('SKIPPED: real-data run (CSV missing)');
+}
+
+// verdict details format money with 2 decimals
+const noisy = verdict({ base: mkCv([], 0), stress: mkCv([], -0.5900000000001455), randomPctBelow: 0 });
+for (const c of noisy.checks) assert.doesNotMatch(c.detail, /\d\.\d{3,}/);
+assert.match(noisy.checks[3].detail, /-\$0\.59/);
+
+// Fewer than 4 sessions is rejected, using a temp CSV outside the repo
+const tmp = mkdtempSync(join(tmpdir(), 'mrbt-'));
+try {
+  const csv = join(tmp, 'few.csv');
+  writeFileSync(csv, `${HEADER}
+100,1,2,0.5,1.5,0
+160,1.5,2,1,1.2,0
+`);
+  assert.throws(() => runBacktest(csv), /sessions/i);
+} finally {
+  rmSync(tmp, { recursive: true, force: true });
 }
 
 
