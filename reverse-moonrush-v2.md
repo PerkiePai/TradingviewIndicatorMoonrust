@@ -26,3 +26,6 @@ The data window NAMES its own plots, so one snapshot exposes most of the archite
 - **~137 box zones** per symbol, accumulated over history — purpose UNKNOWN (need verbose colors/timestamps).
 
 **Open unknowns (need a time series, not more single snapshots):** EMA lengths + smoothing method; ATR period/multipliers behind step_band and step_tp (both are volatility-based, not fixed %, and scale differently per symbol — band 0.21–0.39% of price, TP 0.11–0.17%); ratio TP:band step ≈ 0.45–0.51 (not constant). Next step to pin lengths: collect the plotted Fast/Slow EMA series across many bars (replay step, or OHLCV + fit).
+
+## Order-placement backtest (2026-11-06)
+Leave-one-session-out test of 180 entry and exit setups on `data/XAUUSD_EIGHTCAP_1m.csv` (4 sessions, about 58 signals), sized for a $24 account at 0.01 lot. Verdict: **no demonstrated edge**, which means unproven rather than proven bad. No setup is recommended. Rerun with `node scripts/backtest.mjs`; results are in `reports/moonrush-backtest.md`; design is in `docs/superpowers/specs/2026-11-06-moonrush-backtest-design.md`.
