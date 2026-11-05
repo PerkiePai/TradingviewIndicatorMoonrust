@@ -455,6 +455,17 @@ const goodMd = renderReport({ ...noEdge, verdict: { label: 'demo candidate', che
 assert.match(goodMd, /looks-good/);
 assert.match(goodMd, /in-sample/i);
 
+// Final-review wording
+assert.match(md, /with about 0 test trades/i);
+assert.match(md, /unproven: it does not mean the method is proven bad, and it does not mean it is safe/);
+assert.match(md, /largest fall from the equity high within that run, including within a trade/);
+assert.doesNotMatch(md, /not evidence of an edge/);
+const withNets = (a, b) => renderReport({ ...noEdge, cv: { ...noEdge.cv, '0.16': { ...none, combinedNet: a }, '0.32': { ...none, combinedNet: b } } });
+assert.match(withNets(5, -1), /This positive figure is not evidence of an edge: it disappears at double the spread \(\$0\.32 gives -\$1\.00\)\./);
+assert.match(withNets(5, 0), /not evidence of an edge/);
+assert.doesNotMatch(withNets(5, 2), /not evidence of an edge/);
+assert.doesNotMatch(withNets(-5, -1), /not evidence of an edge/);
+
 // Full run on the real file, if present, from another directory
 const repoCsv = fileURLToPath(new URL('../../data/XAUUSD_EIGHTCAP_1m.csv', import.meta.url));
 if (existsSync(repoCsv)) {
@@ -467,6 +478,7 @@ if (existsSync(repoCsv)) {
   assert.ok(existsSync(out.mdPath) && existsSync(out.jsonPath));
   assert.deepEqual(runBacktest().results, out.results);
   const mdText = readFileSync(out.mdPath, 'utf8');
+  for (const re of [/with about \d+ test trades/i, /unproven: it does not mean/, /largest fall from the equity high/, /not evidence of an edge: it disappears at double the spread \(\$0\.32 gives -\$0\.59\)/]) assert.match(mdText, re);
   assert.doesNotMatch(mdText, /\d\.\d{4,}/);                        // no raw float noise
 } else {
   console.log('SKIPPED: real-data run (CSV missing)');

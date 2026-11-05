@@ -39,6 +39,9 @@ export function renderReport(r) {
   out.push('- Indicators run over the whole file, so when a training session follows a test session, '
     + 'test-day prices still influence its indicators for some hours.');
   out.push('- The random baseline uses market entries whatever entry the chosen setup uses.');
+  const testTrades = base.folds.reduce((sum, f) => sum + (f.test ? f.test.trades.length : 0), 0);
+  out.push(`- With about ${testTrades} test trades, this test had little power to detect a real edge. `
+    + "'No demonstrated edge' means unproven: it does not mean the method is proven bad, and it does not mean it is safe.");
   out.push('- Any candidate goes to a demo account first.', '');
 
   out.push('## Assumptions', '');
@@ -49,10 +52,16 @@ export function renderReport(r) {
   out.push('## Test days at the $0.16 spread', '');
   out.push(table(['Test day', 'Chosen setup', 'Net', 'Max drawdown', 'Trades', 'Win rate', 'Failed'],
     base.folds.map(foldRow)), '');
+  out.push('Max drawdown is the largest fall from the equity high within that run, including within a trade. '
+    + 'It can exceed the $24 start if equity first rose.', '');
 
   const ids = [...new Set(base.folds.filter((f) => f.chosen).map((f) => f.chosen.setup.id))];
   out.push('## Combined result and fold agreement', '');
   out.push(`- Combined test-day net: ${money(base.combinedNet)}`);
+  const stressNet = r.cv['0.32'].combinedNet;
+  if (base.combinedNet > 0 && stressNet <= 0) {
+    out.push(`- This positive figure is not evidence of an edge: it disappears at double the spread ($0.32 gives ${money(stressNet)}).`);
+  }
   out.push(`- Profitable test days: ${base.profitableFolds} of ${base.folds.length}; failed test days: ${base.failedFolds}`);
   out.push(`- Distinct chosen setups: ${ids.length}${ids.length ? ` (${ids.map((i) => `\`${i}\``).join(', ')})` : ''}`, '');
 

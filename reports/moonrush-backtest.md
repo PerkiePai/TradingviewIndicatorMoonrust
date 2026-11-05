@@ -17,6 +17,7 @@ Data: `data/XAUUSD_EIGHTCAP_1m.csv`, 5273 one-minute bars in 4 sessions. Grid: 1
 - Leave-one-day-out means some folds train on days after the test day.
 - Indicators run over the whole file, so when a training session follows a test session, test-day prices still influence its indicators for some hours.
 - The random baseline uses market entries whatever entry the chosen setup uses.
+- With about 15 test trades, this test had little power to detect a real edge. 'No demonstrated edge' means unproven: it does not mean the method is proven bad, and it does not mean it is safe.
 - Any candidate goes to a demo account first.
 
 ## Assumptions
@@ -34,9 +35,12 @@ Data: `data/XAUUSD_EIGHTCAP_1m.csv`, 5273 one-minute bars in 4 sessions. Grid: 1
 | 2026-11-04 | `market\|rsi\|stop12\|trail` | -$16.26 | $16.26 | 2 | 0.0% | yes |
 | 2026-11-05 | `limit1\|none\|stop12\|tp1` | $19.55 | $31.78 | 6 | 66.7% | no |
 
+Max drawdown is the largest fall from the equity high within that run, including within a trade. It can exceed the $24 start if equity first rose.
+
 ## Combined result and fold agreement
 
 - Combined test-day net: $11.89
+- This positive figure is not evidence of an edge: it disappears at double the spread ($0.32 gives -$0.59).
 - Profitable test days: 2 of 4; failed test days: 1
 - Distinct chosen setups: 3 (`limit2|rsi|stop5|tp1.5`, `limit1|none|stop12|tp1`, `market|rsi|stop12|trail`)
 
