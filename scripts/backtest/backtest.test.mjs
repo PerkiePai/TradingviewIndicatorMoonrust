@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { parseBars, splitSessions } from './data.mjs';
 import { simulate, entryAllowedAt } from './simulate.mjs';
+import { buildGrid, selectSetup } from './grid.mjs';
+import { runFold, runCv, selectFinal, verdict } from './cv.mjs';
 import { ema, rsi, atr, resample, buildFeatures } from './indicators.mjs';
 
 const near = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) <= eps, `${a} !~ ${b}`);
@@ -298,5 +300,73 @@ assert.equal(simulate(nb, nanSig, one(nb), SETUP, OPT).trades.length, 0);
 const nanExit = { ...feat(4, { 0: 1 }), exitSignal: [null, NaN, undefined, 0] };
 R = simulate(nb, nanExit, one(nb), OPP, OPT);
 assert.equal(R.trades.length, 1); assert.equal(R.trades[0].reason, 'session-end');
+
+// Task 5: grid, fold selection and verdict
+const grid = buildGrid();
+assert.equal(grid.length, 180);
+assert.equal(new Set(grid.map((s) => s.id)).size, 180);
+assert.deepEqual([...new Set(grid.map((s) => s.stop))], [3, 5, 8, 12]);
+assert.ok(grid.every((s) => s.stop !== null && s.exit.type !== 'tpAtr'));
+
+const row = (id, net, maxDD, n, failed = false) => ({
+  setup: { id }, result: { net, maxDD, failed, trades: Array(n).fill({}) },
+});
+assert.equal(selectSetup([row('a', 10, 5, 10), row('b', 12, 3, 10)]).setup.id, 'b');
+assert.equal(selectSetup([row('a', 10, 5, 10, true)]), null);            // failed
+assert.equal(selectSetup([row('a', 0, 5, 10)]), null);                   // no profit
+assert.equal(selectSetup([row('a', 10, 5, 9)]), null);                   // too few trades
+assert.equal(selectSetup([row('a', 4, 0, 10), row('b', 3, 0.5, 10)]).setup.id, 'a'); // DD floor $1
+assert.equal(selectSetup([row('a', 6, 2, 10), row('b', 6, 2, 12)]).setup.id, 'b');   // more trades
+assert.equal(selectSetup([row('a', 6, 2, 10), row('b', 6, 2, 10)]).setup.id, 'a');   // grid order
+
+// Fold isolation, with indicators held fixed
+const SMALL = { spread: 0.16, grid: buildGrid().slice(0, 40) };
+const ss = splitSessions(sy);
+const base1 = runFold(sy, f, ss, 1, SMALL);
+const scrambled = sy.map((b, i) => (i >= ss[1].start && i <= ss[1].end
+  ? { ...b, o: b.o + 200, h: b.h + 300, l: b.l - 300, c: b.c + 100 } : b));
+assert.equal(runFold(scrambled, f, ss, 1, SMALL).chosen?.setup.id, base1.chosen?.setup.id);
+assert.deepEqual(runFold(scrambled, f, ss, 1, SMALL).chosen?.train, base1.chosen?.train);
+
+// The last-session fold also holds with indicators recomputed
+const lastChanged = sy.map((b, i) => (i >= ss[3].start ? { ...b, c: b.c + 100, h: b.h + 200 } : b));
+assert.equal(
+  runFold(lastChanged, buildFeatures(lastChanged), ss, 3, SMALL).chosen?.setup.id,
+  runFold(sy, f, ss, 3, SMALL).chosen?.setup.id,
+);
+
+// Each test day starts from $24, with its own session only
+const cv = runCv(sy, f, ss, SMALL);
+assert.equal(cv.folds.length, 4);
+for (const fold of cv.folds) {
+  if (!fold.test) continue;
+  const s = ss.find((x) => x.id === fold.testSession.id && x.start === fold.testSession.start);
+  assert.ok(fold.test.trades.every((t) => t.entryIdx >= s.start && t.exitIdx <= s.end));
+}
+
+// A session count other than 4 still gives one fold per session
+assert.equal(runCv(sy, f, ss.slice(0, 3), SMALL).folds.length, 3);
+
+// Nothing passes: all folds are no trade (Review Focus 2)
+const none = runCv(sy, f, ss, { spread: 0.16, grid: [], });
+assert.equal(none.combinedNet, 0); assert.equal(none.profitableFolds, 0);
+assert.ok(none.folds.every((x) => x.chosen === null && x.test === null));
+assert.equal(selectFinal(sy, f, ss, { spread: 0.16, grid: [] }), null);
+
+// Zero trades on the test day is not a profitable fold (Review Focus 3)
+const fakeFold = (net, n, failed = false) => ({ test: { net, failed, trades: Array(n).fill({}) } });
+const mkCv = (folds, combinedNet) => ({
+  folds, combinedNet,
+  profitableFolds: folds.filter((x) => x.test && x.test.net > 0).length,
+  failedFolds: folds.filter((x) => x.test && x.test.failed).length,
+});
+const pass = verdict({ base: mkCv([fakeFold(1, 3), fakeFold(1, 3), fakeFold(1, 3), fakeFold(-1, 3)], 2), stress: mkCv([], 0.5), randomPctBelow: 95 });
+assert.equal(pass.label, 'demo candidate');
+assert.equal(pass.checks.length, 4);
+const nope = (over) => verdict({ base: mkCv([fakeFold(1, 3), fakeFold(1, 3), fakeFold(1, 3), fakeFold(-1, 3)], 2), stress: mkCv([], 0.5), randomPctBelow: 95, ...over }).label;
+assert.equal(nope({ randomPctBelow: 94.9 }), 'no demonstrated edge');
+assert.equal(nope({ stress: mkCv([], 0) }), 'no demonstrated edge');
+assert.equal(nope({ base: mkCv([fakeFold(1, 3), fakeFold(1, 3), fakeFold(0, 0), fakeFold(-1, 3)], 2) }), 'no demonstrated edge');
+assert.equal(nope({ base: mkCv([fakeFold(1, 3), fakeFold(1, 3), fakeFold(1, 3), fakeFold(-9, 3, true)], 2) }), 'no demonstrated edge');
 
 console.log('all tests passed');
