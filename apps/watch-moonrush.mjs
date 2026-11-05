@@ -12,7 +12,7 @@ export function extractSignalRows(studies) {
   const rows = studies.flatMap(s => s.tables.flatMap(t => t.rows));
   return rows
     .filter(r =>  /entry|tp\d?|sl|buy|sell|long|short/i.test(r))
-    .filter(r => !/win|loss|order|drawdown|\bdd\b|rate/i.test(r));
+    .filter(r => !/win|loss|order|drawdown|\bdd\b|rate|hits/i.test(r));
 }
 
 export function computeSignature(rows) {

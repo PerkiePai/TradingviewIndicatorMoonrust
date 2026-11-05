@@ -13,6 +13,9 @@ const STUDIES = [{
       'Loss | 14',
       'Winrate | 66.67%',
       'DD | 1.2% / 3.4% / 0.8%',
+      '🎯TP1 Hits: 23',
+      '🎯TP2 Hits: 14',
+      '🎯TP3 Hits: 0',
     ]
   }]
 }];
@@ -27,6 +30,7 @@ assert.ok(!signal.some(r => /\bwin\b/i.test(r)),    'Win row dropped');
 assert.ok(!signal.some(r => /\bloss\b/i.test(r)),   'Loss row dropped');
 assert.ok(!signal.some(r => /winrate/i.test(r)),    'Winrate row dropped');
 assert.ok(!signal.some(r => /\bdd\b/i.test(r)),     'DD row dropped');
+assert.ok(!signal.some(r => /hits/i.test(r)),        'TP Hits row dropped');
 
 const sig = computeSignature(signal);
 assert.equal(sig, computeSignature(signal), 'signature is deterministic');
@@ -48,6 +52,9 @@ const STUDIES_STATS_CHANGED = [{
       'Loss | 14',
       'Winrate | 67.44%',
       'DD | 1.3% / 3.4% / 0.9%',
+      '🎯TP1 Hits: 24',
+      '🎯TP2 Hits: 14',
+      '🎯TP3 Hits: 0',
     ]
   }]
 }];
