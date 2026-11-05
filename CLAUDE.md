@@ -61,3 +61,14 @@ Values are then fit in Node: candidate MA types/lengths/smoothing, ATR length×m
 - The TradingView Basic plan caps **1 saved script** — saving a second Pine file triggers an upgrade modal. Use the editor's **Add to chart** (no save needed) to run an unsaved script; it won't persist as a named script.
 - The Pine editor's CDP hook can get stuck ("Could not open Pine Editor") after modal/panel churn. A full TradingView reload is **not** needed — just reload the Pine editor itself (close/reopen the editor panel, or re-run the script's editor reload) to clear it.
 - `pines/` holds the canonical Pine files. The replica uses `barcolor` (not `plotcandle`) to recolor candles — `plotcandle` draws a *duplicate* candle series.
+
+## Run watcher
+
+1. Start TradingView Desktop with the debug port (exe path is `TV_EXE` in `.env`; the watcher does not launch it):
+   ```powershell
+   Get-Content .env | Where-Object { $_ -match '^TV_EXE=' } | ForEach-Object { & ($_ -replace '^TV_EXE=','') --remote-debugging-port=9222 }
+   ```
+2. From repo root, start the Discord watcher (needs a real `DISCORD_WEBHOOK_URL` in `.env`):
+   ```powershell
+   node --env-file=.env apps/watch-moonrush.mjs
+   ```
