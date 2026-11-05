@@ -118,13 +118,24 @@ async function tick(corePath, webhookUrl, studyFilter, symbolLabel) {
   }
 }
 
+// Returns ms until the :05 second of the next N-minute boundary (e.g. :00:05, :05:05, :10:05).
+function msUntilNext(intervalMin, startSec) {
+  const now = new Date();
+  const target = new Date(now);
+  const nextM = Math.ceil(now.getMinutes() / intervalMin) * intervalMin;
+  target.setMinutes(nextM, startSec, 0);
+  if (target <= now) target.setMinutes(target.getMinutes() + intervalMin);
+  return target - now;
+}
+
 // --- Entry point (only when run directly) ---
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const {
     TV_MCP_CORE,
     DISCORD_WEBHOOK_URL,
-    INTERVAL_MS  = '20000',
+    INTERVAL_MIN = '5',
+    START_SEC    = '5',
     STUDY_FILTER = 'MoonRush',
     SYMBOL_LABEL = 'XAUUSD',
   } = process.env;
@@ -132,12 +143,13 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   if (!TV_MCP_CORE)         { console.error('TV_MCP_CORE is required');         process.exit(1); }
   if (!DISCORD_WEBHOOK_URL) { console.error('DISCORD_WEBHOOK_URL is required'); process.exit(1); }
 
+  const intervalMin = Number(INTERVAL_MIN);
+  const startSec    = Number(START_SEC);
   const run = () => tick(TV_MCP_CORE, DISCORD_WEBHOOK_URL, STUDY_FILTER, SYMBOL_LABEL)
     .catch(e => console.error('[watcher]', e.message));
 
-  // Self-chaining timeout (not setInterval): the next tick is scheduled only
-  // after the current one settles, so a slow/contended tick never piles up.
-  const loop = async () => { await run(); setTimeout(loop, Number(INTERVAL_MS)); };
-  console.log(`[watcher] starting — symbol=${SYMBOL_LABEL} filter=${STUDY_FILTER} interval=${INTERVAL_MS}ms`);
-  loop();
+  const loop = async () => { await run(); setTimeout(loop, msUntilNext(intervalMin, startSec)); };
+  const delay = msUntilNext(intervalMin, startSec);
+  console.log(`[watcher] starting — symbol=${SYMBOL_LABEL} filter=${STUDY_FILTER} interval=${intervalMin}min @:${String(startSec).padStart(2,'0')}, first tick in ${Math.round(delay / 1000)}s`);
+  setTimeout(loop, delay);
 }

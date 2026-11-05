@@ -26,7 +26,10 @@ That `tradingview-mcp` repo owns all CDP code and its `node_modules` (`chrome-re
 
 ## Running anything — preconditions
 
-1. TradingView Desktop must be running with `--remote-debugging-port=9222`. It's an MSIX install; `tv_launch` can't find the path — launch the exe directly (exact command in `reverse-moonrush-v2.md`), then confirm `http://127.0.0.1:9222/json/version` responds.
+1. TradingView Desktop must be running with `--remote-debugging-port=9222`. It's an MSIX install; `tv_launch` can't find the path — launch the exe directly, then confirm `http://127.0.0.1:9222/json/version` responds:
+   ```powershell
+   taskkill /F /IM TradingView.exe 2>$null; & "C:\Program Files\WindowsApps\TradingView.Desktop_3.5.0.8375_x64__n534cwy3pjxzj\TradingView.exe" --remote-debugging-port=9222
+   ```
 2. **MoonRush V2 must be visible on the chart** — the scripts read *rendered* study output; a hidden or unapplied study returns nothing.
 3. Run from repo root: `node scripts/fit.mjs` (etc.). There is no test runner; each script prints its own analysis to stdout.
 

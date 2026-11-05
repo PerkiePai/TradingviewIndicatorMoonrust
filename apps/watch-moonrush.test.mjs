@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { extractSignalRows, computeSignature, isNewSignal } from './watch-moonrush.mjs';
+import { extractSignalRows, computeSignature, extractDirection, isNewSignal } from './watch-moonrush.mjs';
 
 const STUDIES = [{
   name: 'MoonRush V2',
@@ -35,9 +35,12 @@ assert.ok(!signal.some(r => /hits/i.test(r)),        'TP Hits row dropped');
 const sig = computeSignature(signal);
 assert.equal(sig, computeSignature(signal), 'signature is deterministic');
 
-assert.ok(isNewSignal(signal, 'old-hash'),  'new signal when sig differs');
-assert.ok(!isNewSignal(signal, sig),        'no new signal when sig matches');
-assert.ok(!isNewSignal([], 'any-hash'),     'empty rows never fires');
+assert.equal(extractDirection(signal), 'BULL', 'buy row → BULL');
+assert.equal(extractDirection([]), null, 'empty rows → null');
+
+assert.ok(isNewSignal(signal, 'BEAR'),  'direction change fires');
+assert.ok(!isNewSignal(signal, 'BULL'), 'same direction does not fire');
+assert.ok(!isNewSignal([], 'BULL'),     'empty rows never fires');
 
 // Critical: stats change must NOT alter the signature
 const STUDIES_STATS_CHANGED = [{
