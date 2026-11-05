@@ -188,4 +188,107 @@ const before = simulate(sy, f, splitSessions(sy), SETUP, OPT).trades.filter((t) 
 const after = simulate(changed, g, splitSessions(changed), SETUP, OPT).trades.filter((t) => t.exitIdx <= cut);
 assert.deepEqual(after, before);
 
+// ---- Task 4: limits, filters, trailing, opposite, ATR TP ----
+const LIM = { ...SETUP, entry: { type: 'limit', offset: 1 } };
+// Touch requires ask <= limit; on the fill bar only the stop is live; TP hits later
+R = run([FLAT, [100, 100, 99, 100], [99.5, 102.5, 98.8, 100], [100, 102.1, 100, 102]], { 0: 1 }, LIM);
+assert.equal(R.trades[0].entryIdx, 2); near(R.trades[0].entry, 99);
+assert.equal(R.trades[0].exitIdx, 3); assert.equal(R.trades[0].reason, 'tp'); near(R.trades[0].pnl, 3);
+// A better open fills at the open
+R = run([FLAT, [98, 98.5, 97.9, 98]], { 0: 1 }, LIM);
+near(R.trades[0].entry, 98.16);
+// Stop is live on the limit fill bar
+R = run([FLAT, [99.5, 100, 95.5, 99]], { 0: 1 }, LIM);
+assert.equal(R.trades[0].reason, 'stop'); near(R.trades[0].exit, 95.9);
+// Short limit fills on bid at signal close + offset
+R = run([FLAT, [100.5, 101.2, 100, 101]], { 0: -1 }, LIM);
+near(R.trades[0].entry, 101);
+// Expires after 5 bars
+R = run([FLAT, FLAT, FLAT, FLAT, FLAT, FLAT, [100, 100, 98, 99]], { 0: 1 }, LIM);
+assert.equal(R.trades.length, 0);
+// Opposite signal cancels and replaces it
+R = run([FLAT, FLAT, [100, 101.2, 100, 101]], { 0: 1, 1: -1 }, LIM);
+assert.equal(R.trades.length, 1); assert.equal(R.trades[0].dir, -1);
+// 21:30 cancels a pending limit
+R = run([FLAT, FLAT, FLAT, [100, 100, 98, 99]], { 0: 1 }, LIM, OPT, at(21, 28));
+assert.equal(R.trades.length, 0);
+
+// Filters read the signal bar
+const fb = mkBars(flatN(4));
+const hot = { ...feat(4, { 0: 1 }), rsi: [71, 50, 50, 50] };
+assert.equal(simulate(fb, hot, one(fb), { ...SETUP, filter: 'rsi' }, OPT).trades.length, 0);
+const ok = { ...feat(4, { 0: 1 }), rsi: [70, 50, 50, 50] };
+assert.equal(simulate(fb, ok, one(fb), { ...SETUP, filter: 'rsi' }, OPT).trades.length, 1);
+const cold = { ...feat(4, { 0: -1 }), rsi: [29, 50, 50, 50] };
+assert.equal(simulate(fb, cold, one(fb), { ...SETUP, filter: 'rsi' }, OPT).trades.length, 0);
+const trend = (v) => ({ ...feat(4, { 0: 1 }), trend5m: [v, v, v, v] });
+assert.equal(simulate(fb, trend(1), one(fb), { ...SETUP, filter: 'trend5m' }, OPT).trades.length, 1);
+assert.equal(simulate(fb, trend(-1), one(fb), { ...SETUP, filter: 'trend5m' }, OPT).trades.length, 0);
+assert.equal(simulate(fb, trend(null), one(fb), { ...SETUP, filter: 'trend5m' }, OPT).trades.length, 0);
+
+// Trailing: uses the bar's extreme from the next bar, and never moves backward
+const TR = { ...SETUP, exit: { type: 'trail' } };
+R = run([FLAT, [100, 100.5, 99.5, 100], [100, 105, 101, 104], [104, 104.5, 102.5, 103], [103, 103.5, 101.9, 102]], { 0: 1 }, TR);
+assert.equal(R.trades[0].exitIdx, 4); assert.equal(R.trades[0].reason, 'trail');
+near(R.trades[0].exit, 101.9); near(R.trades[0].pnl, 1.74);
+// Short trail uses ask lows
+R = run([FLAT, [100, 100.5, 99.5, 100], [100, 100, 95, 96], [96, 98.2, 96, 98]], { 0: -1 }, TR);
+assert.equal(R.trades[0].exitIdx, 3);
+near(R.trades[0].exit, 98.26); near(R.trades[0].pnl, 100 - 98.26);
+
+// Opposite: exits at next open on bid, and reverses at the same open on bid
+const OPP = { ...SETUP, exit: { type: 'opposite' } };
+R = run([FLAT, FLAT, FLAT, [101, 101, 101, 101], [101, 101, 101, 101]], { 0: 1, 2: -1 }, OPP);
+assert.equal(R.trades[0].reason, 'opposite'); assert.equal(R.trades[0].exitIdx, 3); near(R.trades[0].exit, 101);
+assert.equal(R.trades[1].dir, -1); assert.equal(R.trades[1].entryIdx, 3); near(R.trades[1].entry, 101);
+// A filter that blocks the reverse still exits
+const blocked = { ...feat(5, { 0: 1, 2: -1 }), rsi: [50, 50, 29, 50, 50] };
+const ob = mkBars(flatN(5));
+R = simulate(ob, blocked, one(ob), { ...OPP, filter: 'rsi' }, OPT);
+assert.equal(R.trades.length, 1); assert.equal(R.trades[0].reason, 'opposite');
+// The stop stays live, and other exits ignore opposite signals
+R = run([FLAT, [100, 100, 96, 97], FLAT], { 0: 1 }, OPP);
+assert.equal(R.trades[0].reason, 'stop');
+R = run([FLAT, FLAT, FLAT, FLAT], { 0: 1, 1: -1 }, SETUP);
+assert.equal(R.trades.length, 1); assert.equal(R.trades[0].dir, 1);
+// exitSignal drives opposite exits when given, while signal drives entries
+const es = { ...feat(4, { 0: 1 }), exitSignal: [0, -1, 0, 0] };
+const eb = mkBars(flatN(4));
+R = simulate(eb, es, one(eb), OPP, OPT);
+assert.equal(R.trades.length, 1); assert.equal(R.trades[0].exitIdx, 2); assert.equal(R.trades[0].reason, 'opposite');
+
+// Indicator default: ATR TP, no stop, reverse on cross, blocked until ATR exists
+const DEF = { id: 'default', entry: { type: 'market' }, filter: 'none', stop: null, exit: { type: 'tpAtr', mult: 0.5 } };
+const db = mkBars([FLAT, [100, 102.2, 100, 102], FLAT, FLAT]);
+const df = { ...feat(4, { 0: 1 }), atr15m: [4, 4, 4, 4] };
+R = simulate(db, df, one(db), DEF, OPT);
+near(R.trades[0].exit, 102.16); assert.equal(R.trades[0].reason, 'tp');
+assert.equal(simulate(db, feat(4, { 0: 1 }), one(db), DEF, OPT).trades.length, 0);
+// haltOnFail false keeps trading and still records the failure
+const lossy = mkBars([FLAT, [100, 100, 80, 80], [80, 80, 80, 80], FLAT, FLAT]);
+const lf = { ...feat(5, { 0: 1, 2: -1 }), atr15m: Array(5).fill(4) };
+R = simulate(lossy, lf, one(lossy), DEF, { ...OPT, haltOnFail: false });
+assert.equal(R.failed, true); assert.equal(R.firstFailIdx, 1); assert.equal(R.trades[0].reason, 'opposite');
+
+// Post-close equity of an opposite exit enters the peak before the reverse trade's worst price.
+// Long 100 -> exit 106 (+6, equity 30, peak 30); short 106 stopped at 109.1 (-3.1, equity 26.9): maxDD 3.1
+R = run([FLAT, FLAT, [104, 104, 104, 104], [106, 109.2, 106, 109]], { 0: 1, 2: -1 }, OPP, { spread: 0 });
+assert.equal(R.trades.length, 2);
+assert.equal(R.trades[0].reason, 'opposite'); assert.equal(R.trades[1].reason, 'stop');
+near(R.net, 2.9); near(R.maxDD, 3.1);
+// A failing opposite close halts the run before the reversal opens (long 100 -> 80 = -20, equity 4)
+const OPPW = { ...OPP, stop: 30 };
+R = run([FLAT, FLAT, [95, 95, 95, 95], [80, 80, 80, 80], FLAT], { 0: 1, 2: -1 }, OPPW, { spread: 0 });
+assert.equal(R.failed, true); assert.equal(R.firstFailIdx, 3);
+assert.equal(R.trades.length, 1); assert.equal(R.trades[0].reason, 'opposite');
+near(R.net, -20); near(R.maxDD, 20);
+
+// Null, undefined and NaN mean no signal (not a short)
+const nb = mkBars(flatN(4));
+const nanSig = { ...feat(4), signal: [NaN, null, undefined, NaN] };
+assert.equal(simulate(nb, nanSig, one(nb), SETUP, OPT).trades.length, 0);
+const nanExit = { ...feat(4, { 0: 1 }), exitSignal: [null, NaN, undefined, 0] };
+R = simulate(nb, nanExit, one(nb), OPP, OPT);
+assert.equal(R.trades.length, 1); assert.equal(R.trades[0].reason, 'session-end');
+
 console.log('all tests passed');
