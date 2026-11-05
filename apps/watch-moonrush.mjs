@@ -20,21 +20,30 @@ export function computeSignature(rows) {
   return createHash('sha256').update(rows.join('\n')).digest('hex');
 }
 
-export function isNewSignal(rows, lastSig) {
-  return rows.length > 0 && computeSignature(rows) !== lastSig;
+export function extractDirection(rows) {
+  for (const r of rows) {
+    if (/\b(buy|long)\b/i.test(r)) return 'BULL';
+    if (/\b(sell|short)\b/i.test(r)) return 'BEAR';
+  }
+  return null;
+}
+
+export function isNewSignal(rows, lastDir) {
+  const dir = extractDirection(rows);
+  return dir !== null && dir !== lastDir;
 }
 
 // --- State ---
 
-async function loadSignature() {
+async function loadDirection() {
   try {
     const s = JSON.parse(await readFile(STATE_FILE, 'utf8'));
-    return s.signature ?? null;
+    return s.direction ?? null;
   } catch { return null; }
 }
 
-async function saveSignature(sig) {
-  await writeFile(STATE_FILE, JSON.stringify({ signature: sig }));
+async function saveDirection(dir) {
+  await writeFile(STATE_FILE, JSON.stringify({ direction: dir }));
 }
 
 // --- Discord ---
@@ -92,18 +101,20 @@ async function tick(corePath, webhookUrl, studyFilter, symbolLabel) {
   if (!studies.length) { console.warn('[watcher] indicator not visible — skipping tick'); return; }
 
   const rows = extractSignalRows(studies);
-  const lastSig = await loadSignature();
+  const lastDir = await loadDirection();
 
-  if (lastSig === null) {
-    if (rows.length) await saveSignature(computeSignature(rows));
+  if (lastDir === null) {
+    if (rows.length) await saveDirection(extractDirection(rows));
     console.log('[watcher] baseline recorded');
     return;
   }
 
-  if (isNewSignal(rows, lastSig)) {
+  if (isNewSignal(rows, lastDir)) {
     await postDiscord(webhookUrl, symbolLabel, rows); // throw = Discord down → don't persist
-    await saveSignature(computeSignature(rows));
+    await saveDirection(extractDirection(rows));
     console.log('[watcher] signal posted:', rows[0]);
+  } else {
+    console.log(`[watcher] ${new Date().toLocaleTimeString()} alive — dir=${extractDirection(rows) ?? '?'}`);
   }
 }
 
@@ -124,7 +135,9 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const run = () => tick(TV_MCP_CORE, DISCORD_WEBHOOK_URL, STUDY_FILTER, SYMBOL_LABEL)
     .catch(e => console.error('[watcher]', e.message));
 
+  // Self-chaining timeout (not setInterval): the next tick is scheduled only
+  // after the current one settles, so a slow/contended tick never piles up.
+  const loop = async () => { await run(); setTimeout(loop, Number(INTERVAL_MS)); };
   console.log(`[watcher] starting — symbol=${SYMBOL_LABEL} filter=${STUDY_FILTER} interval=${INTERVAL_MS}ms`);
-  await run();
-  setInterval(run, Number(INTERVAL_MS));
+  loop();
 }
