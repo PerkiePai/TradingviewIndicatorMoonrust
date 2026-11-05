@@ -19,8 +19,11 @@ export function makeRng(seed) {
 }
 
 // Market entries on random eligible bars in random directions, using the setup's stop and exit.
-// Picks accumulate until the run makes k trades or the session has no bars left to pick; a pick
-// that lands in an open position makes no trade, and one pick adds at most one trade.
+// Phase 1 picks bars ignoring the failure rule: a candidate is accepted only if simulating all
+// accepted picks plus it gives exactly one trade per pick, each entering on its pick's next bar;
+// otherwise it is redrawn (a pick inside an open position, or one that shifts an earlier pick).
+// Phase 2 simulates the accepted picks once with the caller's opts, so a run that fails stops
+// at its failure with fewer trades and nothing is retried.
 export function randomRun(bars, features, session, setup, k, rng, opts = { spread: 0.16 }) {
   const pool = [];
   for (let i = Math.max(session.start, WARMUP); i < session.end; i++) {
@@ -28,18 +31,21 @@ export function randomRun(bars, features, session, setup, k, rng, opts = { sprea
   }
   const signal = new Int8Array(bars.length);
   const randomSetup = { ...setup, entry: { type: 'market' }, filter: 'none' };
-  const sim = { ...opts, haltOnFail: true };
   const feats = { ...features, signal, exitSignal: features.signal };
-  let result = simulate(bars, feats, [session], randomSetup, sim);
-  while (result.trades.length < k && pool.length > 0) {
+  const picking = { ...opts, haltOnFail: false };
+  const picks = []; // accepted bar indexes
+  while (picks.length < k && pool.length > 0) {
     const j = Math.floor(rng() * pool.length);
     const i = pool[j];
     pool[j] = pool[pool.length - 1];
     pool.pop();
     signal[i] = rng() < 0.5 ? 1 : -1;
-    result = simulate(bars, feats, [session], randomSetup, sim);
+    const { trades } = simulate(bars, feats, [session], randomSetup, picking);
+    const want = [...picks, i].sort((x, y) => x - y);
+    if (trades.length === want.length && trades.every((t, m) => t.entryIdx === want[m] + 1)) picks.push(i);
+    else signal[i] = 0;
   }
-  return result;
+  return simulate(bars, feats, [session], randomSetup, opts);
 }
 
 const quantile = (sorted, p) => sorted[Math.floor(p * (sorted.length - 1))];

@@ -391,6 +391,26 @@ const rr = randomRun(sy, f, ss[3], buildGrid()[0], 5, makeRng(2));
 assert.equal(rr.trades.length, 5);
 assert.ok(rr.trades.every((t) => t.entryIdx >= ss[3].start && t.exitIdx <= ss[3].end));
 
+// randomRun hits exactly k trades for any seed when failure is off, and failure never steers the picks
+const NOFAIL = { spread: 0.16, failEquity: -1e9 };
+const tpSetup = buildGrid().find((x) => x.exit.type === 'tp');
+const oppSetup = buildGrid().find((x) => x.exit.type === 'opposite');
+for (const setup of [tpSetup, oppSetup]) {
+  for (let seed = 1; seed <= 20; seed++) {
+    assert.equal(randomRun(sy, f, ss[3], setup, 5, makeRng(seed), NOFAIL).trades.length, 5);
+  }
+}
+let sawFail = 0;
+for (let seed = 1; seed <= 20; seed++) {
+  const free = randomRun(sy, f, ss[3], tpSetup, 5, makeRng(seed), NOFAIL);
+  const hard = randomRun(sy, f, ss[3], tpSetup, 5, makeRng(seed), { spread: 0.16, failEquity: 23.9 });
+  if (hard.failed) sawFail++;
+  assert.deepEqual(hard.trades.map((x) => x.entryIdx), free.trades.map((x) => x.entryIdx).slice(0, hard.trades.length));
+}
+assert.ok(sawFail > 0);
+const tiny = { id: 's', start: 299, end: 302 };
+assert.ok(randomRun(sy, f, tiny, tpSetup, 50, makeRng(3), NOFAIL).trades.length <= 2);
+
 // Indicator default: no entries before the ATR exists, and it trades later
 const dr = indicatorDefault(sy, f, ss, { spread: 0.16 });
 assert.ok(dr.trades.length > 0);
