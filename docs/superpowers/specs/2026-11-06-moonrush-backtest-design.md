@@ -59,6 +59,9 @@ first close. Pine-style seeding may change them slightly.
 - Leave-one-day-out means some folds train on days after the test day. The rules
   do not adapt over time and each session ends flat, but this is still weaker
   than forward testing.
+- Indicators run over the full file, so when a training session follows the test
+  session, test-day prices still influence its indicators for some hours. The
+  report states this limit.
 - Results are a screen, not proof. Any candidate goes to a demo account first.
 
 ## Signals and indicators
@@ -257,7 +260,10 @@ fewer than four sessions.
 **Leakage tests:**
 
 - Changing future bars does not change earlier signals, filters or fills.
-- Changing a fold's test session does not change that fold's chosen setup.
+- With indicators held fixed, changing a fold's test-session bars does not change
+  that fold's chosen setup.
+- For the fold testing the last session, this also holds when indicators are
+  recomputed, because no training bar follows that session.
 
 **Run-level checks:**
 
