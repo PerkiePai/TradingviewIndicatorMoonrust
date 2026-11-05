@@ -93,8 +93,10 @@ export function simulate(bars, features, sessions, setup, opts) {
           trades.push({ dir: pos.dir, entryIdx: pos.entryIdx, exitIdx: i, entry: pos.entry, exit: exit.price, pnl, reason: exit.reason });
           realised += pnl;
           pos = null;
-        }
-        track(eq);
+          // Worst point first, then the post-close equity, so a same-bar re-entry still sees the new peak.
+          track(eq);
+          track(startEquity + realised);
+        } else track(eq);
         if (exit?.reason === 'fail') return result();
       } else {
         track(startEquity + realised);

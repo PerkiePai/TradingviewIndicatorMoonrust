@@ -172,6 +172,12 @@ assert.equal(R.failed, true);
 R = run([FLAT, [100, 100, 84.01, 100], FLAT], { 0: 1 }, WIDE, { spread: 0 });
 assert.equal(R.failed, false);
 
+// Post-close equity raises the peak even when a new trade opens on the next bar:
+// TP +3, immediate re-entry stopped at -3.1 -> net -0.1, maxDD 3.1
+R = run([FLAT, [100, 100.5, 99.5, 100], [100, 103, 100, 103], [103, 103, 99, 100]], { 0: 1, 2: 1 }, SETUP, { spread: 0 });
+assert.equal(R.trades.length, 2);
+near(R.net, -0.1); near(R.maxDD, 3.1);
+
 // Zero costs: sum of trade P&L equals net on real-looking data
 const acc = simulate(sy, f, splitSessions(sy), SETUP, { spread: 0, slippage: 0 });
 near(acc.trades.reduce((s, t) => s + t.pnl, 0), acc.net, 1e-6);
