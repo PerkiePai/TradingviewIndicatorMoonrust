@@ -1,0 +1,91 @@
+//@version=5
+// MoonRush V2 — behaves-alike reconstruction (black-box, via TradingView MCP runtime evidence).
+// Confirmed: EMA engine matches the real plots to 0.000 (Fast=ema(ema(close,38),10), Slow=ema(ema(close,62),10)).
+// Input names/defaults lifted verbatim from the protected study's metaInfo().inputs.
+// UNCERTAIN (see TODO): exact band basis EMA, literal ATR length (800 unverifiable), TP ATR timeframe/multiplier.
+indicator("MoonRush V2 (reconstruction)", overlay=true, max_labels_count=500, max_lines_count=500, max_boxes_count=500)
+
+// ---------------- Inputs (ids/defaults from the original) ----------------
+showEma   = input.bool(true, "Show EMA Lines")
+showBg    = input.bool(true, "Show Background Color")
+showFill  = input.bool(true, "Show Fill Between EMAs")
+colorBars = input.bool(true, "Color/Overlay Bars by Trend")
+fastLen   = input.int(38, "Fast EMA Length")
+slowLen   = input.int(62, "Slow EMA Length")
+smoothLen = input.int(10, "Smoothing Length")
+emaWidth  = input.int(2,  "EMA Line Width")
+riverLen  = input.int(62, "EMA FOR RIVER")
+riverSm   = input.int(20, "RIVER SMOOTHING")
+atrLen    = input.int(800,"ATR Length")
+m1 = input.float(6,  "ATR Multiplier 1")
+m2 = input.float(9,  "ATR Multiplier 2")
+m3 = input.float(12, "ATR Multiplier 3")
+rsiLen    = input.int(14, "RSI Length")
+plotTP    = input.bool(true,  "plotTP_SL")
+useSL     = input.bool(false, "useSL")
+atrTPlen  = input.int(100, "ATR For TP/SL")
+tpMult    = input.float(0.5, "tpMultiplier")
+slMult    = input.float(1.5, "slMultiplier")
+// TP ATR uses a higher reference TF (not chart TF): named inputs ATR=100 & tpMult=0.5 only
+// reproduce the observed TP step (≈4.34 on gold) when ATR(100) is read on ~15m. Best estimate 15m;
+// confirm exact TF by capturing entry+TP1-3+ATR at one live cross.
+tpTF      = input.string("15", "TP ATR timeframe (blank = chart)")
+
+// ---------------- Smoothed EMAs (CONFIRMED exact) ----------------
+smooth(src, baseLen, smLen) => ta.ema(ta.ema(src, baseLen), smLen)
+fast = smooth(close, fastLen, smoothLen)
+slow = smooth(close, slowLen, smoothLen)
+river = smooth(close, riverLen, riverSm)
+
+bull = ta.crossover(fast, slow)
+bear = ta.crossunder(fast, slow)
+trendUp = fast > slow
+
+// ---------------- EMA lines, fill, trend color ----------------
+pf = plot(showEma ? fast : na, "Fast EMA (smoothed)", color.new(color.aqua, 0), emaWidth)
+ps = plot(showEma ? slow : na, "Slow EMA (smoothed)", color.new(color.orange, 0), emaWidth)
+fill(pf, ps, showFill ? color.new(trendUp ? color.green : color.red, 80) : na)
+barcolor(colorBars ? (trendUp ? color.new(color.green, 0) : color.new(color.red, 0)) : na)
+bgcolor(showBg ? color.new(trendUp ? color.green : color.red, 92) : na)
+
+// ---------------- ATR bands  (basis≈smoothed EMA; multipliers CONFIRMED 6/9/12) ----------------
+basis = slow                      // TODO: basis is a smoothed EMA within rounding of Slow; verify vs river.
+atr = ta.atr(atrLen)
+R1 = basis + atr * m1, R2 = basis + atr * m2, R3 = basis + atr * m3
+S1 = basis - atr * m1, S2 = basis - atr * m2, S3 = basis - atr * m3
+plot(R1,"R1",color.new(color.red,0)),   plot(R2,"R2",color.new(color.red,30)),   plot(R3,"R3",color.new(color.red,60))
+plot(S1,"S1",color.new(color.green,0)),  plot(S2,"S2",color.new(color.green,30)), plot(S3,"S3",color.new(color.green,60))
+
+// ---------------- Cross markers ----------------
+plotshape(bull, "Bullish Cross", shape.triangleup,   location.belowbar, color.green, size=size.tiny)
+plotshape(bear, "Bearish Cross", shape.triangledown, location.abovebar, color.red,   size=size.tiny)
+
+// ---------------- TP / SL on signal ----------------
+tpAtr = tpTF == "" ? ta.atr(atrTPlen) : request.security(syminfo.tickerid, tpTF, ta.atr(atrTPlen))
+step = tpAtr * tpMult
+var line[] tl = array.new<line>()
+if plotTP and (bull or bear)
+    entry = close                  // TODO: label suggests entry≈EMA cross price; verify on live signal.
+    dir = bull ? 1 : -1
+    for i = 1 to 3
+        p = entry + dir * step * i
+        label.new(bar_index, p, (bull?"💵TP":"💵TP")+str.tostring(i)+": "+str.tostring(p, format.mintick), style=label.style_label_left, color=color.new(color.teal,0), textcolor=color.white, size=size.tiny)
+    label.new(bar_index, entry, "⭐Entry: "+str.tostring(entry, format.mintick)+(bull?" (BUY)":" (SELL)"), style=label.style_label_left, color=color.new(color.blue,0), textcolor=color.white, size=size.tiny)
+    if useSL
+        label.new(bar_index, entry - dir*tpAtr*slMult, "🛑SL", style=label.style_label_left, color=color.new(color.maroon,0), textcolor=color.white, size=size.tiny)
+
+// ---------------- MTF RSI + trend dashboard ----------------
+f_cell(tf) =>
+    r = request.security(syminfo.tickerid, tf, ta.rsi(close, rsiLen))
+    t = request.security(syminfo.tickerid, tf, (ta.ema(ta.ema(close,fastLen),smoothLen) > ta.ema(ta.ema(close,slowLen),smoothLen)) ? 1 : 0)
+    [r, t]
+var table dash = table.new(position.top_right, 3, 9, border_width=1)
+if barstate.islast
+    table.cell(dash,0,0,"TF"), table.cell(dash,1,0,"Trend"), table.cell(dash,2,0,"RSI")
+    tfs = array.from("","1","5","15","30","60","240","1D")
+    for i = 0 to array.size(tfs)-1
+        tf = array.get(tfs,i)
+        [r,t] = f_cell(tf == "" ? timeframe.period : tf)
+        table.cell(dash,0,i+1, tf=="" ? "Chart" : (tf=="60"?"1h":tf=="240"?"4h":tf=="1D"?"1d":tf+"m"))
+        table.cell(dash,1,i+1, t==1?"Bullish":"Bearish", text_color = t==1?color.green:color.red)
+        table.cell(dash,2,i+1, str.tostring(r, "#.##"))
