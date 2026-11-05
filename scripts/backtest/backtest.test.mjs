@@ -3,6 +3,8 @@ import { parseBars, splitSessions } from './data.mjs';
 import { simulate, entryAllowedAt } from './simulate.mjs';
 import { buildGrid, selectSetup } from './grid.mjs';
 import { runFold, runCv, selectFinal, verdict } from './cv.mjs';
+import { makeRng, randomRun, randomComparison, indicatorDefault } from './references.mjs';
+import { excursionStudy } from './excursion.mjs';
 import { ema, rsi, atr, resample, buildFeatures } from './indicators.mjs';
 
 const near = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) <= eps, `${a} !~ ${b}`);
@@ -368,5 +370,41 @@ assert.equal(nope({ randomPctBelow: 94.9 }), 'no demonstrated edge');
 assert.equal(nope({ stress: mkCv([], 0) }), 'no demonstrated edge');
 assert.equal(nope({ base: mkCv([fakeFold(1, 3), fakeFold(1, 3), fakeFold(0, 0), fakeFold(-1, 3)], 2) }), 'no demonstrated edge');
 assert.equal(nope({ base: mkCv([fakeFold(1, 3), fakeFold(1, 3), fakeFold(1, 3), fakeFold(-9, 3, true)], 2) }), 'no demonstrated edge');
+
+
+assert.deepEqual([makeRng(7)(), makeRng(7)()], [makeRng(7)(), makeRng(7)()]);
+assert.notEqual(makeRng(7)(), makeRng(8)());
+
+const rc = randomComparison(sy, f, ss, cv, { runs: 25, seed: 11 });
+assert.deepEqual(randomComparison(sy, f, ss, cv, { runs: 25, seed: 11 }), rc);  // repeatable
+assert.equal(rc.runs, 25);
+assert.ok(rc.pctBelow >= 0 && rc.pctBelow <= 100);
+assert.ok(rc.p5 <= rc.p50 && rc.p50 <= rc.p95);
+
+// A fold with no trades contributes $0 (Review Focus 2 and 3)
+const rz = randomComparison(sy, f, ss, none, { runs: 5, seed: 1 });
+assert.deepEqual([rz.p5, rz.p50, rz.p95], [0, 0, 0]);
+assert.equal(rz.pctBelow, 0);  // strictly below: $0 vs $0 counts as not beating
+
+// A random run makes the requested number of trades when there is room
+const rr = randomRun(sy, f, ss[3], buildGrid()[0], 5, makeRng(2));
+assert.equal(rr.trades.length, 5);
+assert.ok(rr.trades.every((t) => t.entryIdx >= ss[3].start && t.exitIdx <= ss[3].end));
+
+// Indicator default: no entries before the ATR exists, and it trades later
+const dr = indicatorDefault(sy, f, ss, { spread: 0.16 });
+assert.ok(dr.trades.length > 0);
+assert.ok(dr.trades.every((t) => f.atr15m[t.entryIdx - 1] !== null));
+
+// Excursion: long from ask 100.16 runs to bid 104 and 98, until the opposite signal
+const xb = mkBars([FLAT, [100, 104, 98, 101], [101, 101, 101, 101], [101, 110, 90, 101]]);
+const xs = excursionStudy(xb, feat(4, { 0: 1, 2: -1 }), one(xb), { spread: 0.16 });
+assert.equal(xs.count, 2);
+assert.ok(xs.adverseReach.map((x) => x.level).join() === '3,5,8,12,16');
+const x1 = excursionStudy(mkBars([FLAT, [100, 104, 98, 101]]), feat(2, { 0: 1 }), one(mkBars([FLAT, FLAT])), { spread: 0.16 });
+near(x1.adverse.max, 2.16); near(x1.favourable.max, 3.84);
+assert.equal(x1.adverseReach[0].share, 0);
+const x0 = excursionStudy(xb, feat(4), one(xb), { spread: 0.16 });
+assert.equal(x0.count, 0); assert.equal(x0.adverse.median, null);
 
 console.log('all tests passed');
