@@ -41,11 +41,11 @@ plain-text Discord messages.
 
 ## Architecture
 
-One file, `watch-moonrush.mjs`, in `D:\code\project\ReaMoonrushV2`. ~80 lines.
+One file, `apps/watch-moonrush.mjs`, in `D:\code\project\ReaMoonrushV2`. ~80 lines.
 
 ### Config — `.env` (Node built-in `--env-file`, no dependency)
 
-Run: `node --env-file=.env watch-moonrush.mjs`
+Run: `node --env-file=.env apps/watch-moonrush.mjs`
 
 `.env` keys (a committed `.env.example` documents them; real `.env` is
 git-ignored):
