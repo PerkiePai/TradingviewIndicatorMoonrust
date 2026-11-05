@@ -1,0 +1,1525 @@
+{
+  "meta": {
+    "csv": "data/XAUUSD_EIGHTCAP_1m.csv",
+    "bars": 5273,
+    "sessions": 4,
+    "seed": 20261106,
+    "gridSize": 180
+  },
+  "excursion": {
+    "count": 57,
+    "adverse": {
+      "median": 6.199999999999818,
+      "p75": 8.440000000000055,
+      "p90": 11.259999999999671,
+      "max": 34.41999999999962
+    },
+    "favourable": {
+      "median": 5.650000000000546,
+      "p75": 14.309999999999945,
+      "p90": 23.302000000000135,
+      "max": 101.5300000000002
+    },
+    "adverseReach": [
+      {
+        "level": 3,
+        "share": 0.7719298245614035
+      },
+      {
+        "level": 5,
+        "share": 0.5789473684210527
+      },
+      {
+        "level": 8,
+        "share": 0.3333333333333333
+      },
+      {
+        "level": 12,
+        "share": 0.08771929824561403
+      },
+      {
+        "level": 16,
+        "share": 0.07017543859649122
+      }
+    ]
+  },
+  "cv": {
+    "0.16": {
+      "spread": 0.16,
+      "folds": [
+        {
+          "testSession": {
+            "id": "2026-11-02",
+            "start": 0,
+            "end": 1377
+          },
+          "chosen": {
+            "setup": {
+              "id": "limit2|rsi|stop5|tp1.5",
+              "entry": {
+                "type": "limit",
+                "offset": 2
+              },
+              "filter": "rsi",
+              "stop": 5,
+              "exit": {
+                "type": "tp",
+                "mult": 1.5
+              }
+            },
+            "train": {
+              "net": 43.91000000000031,
+              "maxDD": 13.179999999999836,
+              "failed": false,
+              "firstFailIdx": null
+            }
+          },
+          "test": {
+            "trades": [
+              {
+                "dir": 1,
+                "entryIdx": 313,
+                "exitIdx": 339,
+                "entry": 3906.04,
+                "exit": 3900.94,
+                "pnl": -5.099999999999909,
+                "reason": "stop"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 638,
+                "exitIdx": 743,
+                "entry": 3900.37,
+                "exit": 3905.47,
+                "pnl": -5.099999999999909,
+                "reason": "stop"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 823,
+                "exitIdx": 868,
+                "entry": 3903.58,
+                "exit": 3908.68,
+                "pnl": -5.099999999999909,
+                "reason": "stop"
+              }
+            ],
+            "net": -15.299999999999727,
+            "maxDD": 15.529999999999745,
+            "failed": false,
+            "firstFailIdx": null
+          }
+        },
+        {
+          "testSession": {
+            "id": "2026-11-03",
+            "start": 1378,
+            "end": 2755
+          },
+          "chosen": {
+            "setup": {
+              "id": "limit1|none|stop12|tp1",
+              "entry": {
+                "type": "limit",
+                "offset": 1
+              },
+              "filter": "none",
+              "stop": 12,
+              "exit": {
+                "type": "tp",
+                "mult": 1
+              }
+            },
+            "train": {
+              "net": 81.47999999999956,
+              "maxDD": 31.780000000000655,
+              "failed": false,
+              "firstFailIdx": null
+            }
+          },
+          "test": {
+            "trades": [
+              {
+                "dir": -1,
+                "entryIdx": 1537,
+                "exitIdx": 1642,
+                "entry": 3947.69,
+                "exit": 3935.69,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": 1,
+                "entryIdx": 2023,
+                "exitIdx": 2204,
+                "entry": 3907.63,
+                "exit": 3919.63,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 2325,
+                "exitIdx": 2352,
+                "entry": 3945.87,
+                "exit": 3933.87,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": 1,
+                "entryIdx": 2520,
+                "exitIdx": 2634,
+                "entry": 3931.66,
+                "exit": 3919.56,
+                "pnl": -12.099999999999909,
+                "reason": "stop"
+              }
+            ],
+            "net": 23.90000000000009,
+            "maxDD": 14.400000000000091,
+            "failed": false,
+            "firstFailIdx": null
+          }
+        },
+        {
+          "testSession": {
+            "id": "2026-11-04",
+            "start": 2756,
+            "end": 4133
+          },
+          "chosen": {
+            "setup": {
+              "id": "market|rsi|stop12|trail",
+              "entry": {
+                "type": "market"
+              },
+              "filter": "rsi",
+              "stop": 12,
+              "exit": {
+                "type": "trail"
+              }
+            },
+            "train": {
+              "net": 141.57000000000198,
+              "maxDD": 20.56999999999971,
+              "failed": false,
+              "firstFailIdx": null
+            }
+          },
+          "test": {
+            "trades": [
+              {
+                "dir": -1,
+                "entryIdx": 2854,
+                "exitIdx": 2875,
+                "entry": 3921.82,
+                "exit": 3933.08,
+                "pnl": -11.259999999999764,
+                "reason": "trail"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 2959,
+                "exitIdx": 2967,
+                "entry": 3939.38,
+                "exit": 3944.3799999999997,
+                "pnl": -4.999999999999545,
+                "reason": "fail"
+              }
+            ],
+            "net": -16.25999999999931,
+            "maxDD": 16.25999999999931,
+            "failed": true,
+            "firstFailIdx": 2967
+          }
+        },
+        {
+          "testSession": {
+            "id": "2026-11-05",
+            "start": 4134,
+            "end": 5272
+          },
+          "chosen": {
+            "setup": {
+              "id": "limit1|none|stop12|tp1",
+              "entry": {
+                "type": "limit",
+                "offset": 1
+              },
+              "filter": "none",
+              "stop": 12,
+              "exit": {
+                "type": "tp",
+                "mult": 1
+              }
+            },
+            "train": {
+              "net": 85.83000000000038,
+              "maxDD": 28.01000000000022,
+              "failed": false,
+              "firstFailIdx": null
+            }
+          },
+          "test": {
+            "trades": [
+              {
+                "dir": 1,
+                "entryIdx": 4159,
+                "exitIdx": 4212,
+                "entry": 4061.64,
+                "exit": 4073.64,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": 1,
+                "entryIdx": 4581,
+                "exitIdx": 4860,
+                "entry": 4123.69,
+                "exit": 4135.69,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": 1,
+                "entryIdx": 5023,
+                "exitIdx": 5065,
+                "entry": 4125.78,
+                "exit": 4113.679999999999,
+                "pnl": -12.100000000000364,
+                "reason": "stop"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 5070,
+                "exitIdx": 5076,
+                "entry": 4097.34,
+                "exit": 4109.4400000000005,
+                "pnl": -12.100000000000364,
+                "reason": "stop"
+              },
+              {
+                "dir": 1,
+                "entryIdx": 5178,
+                "exitIdx": 5192,
+                "entry": 4108.78,
+                "exit": 4120.78,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 5247,
+                "exitIdx": 5272,
+                "entry": 4105.82,
+                "exit": 4098.07,
+                "pnl": 7.75,
+                "reason": "session-end"
+              }
+            ],
+            "net": 19.549999999999272,
+            "maxDD": 31.780000000000655,
+            "failed": false,
+            "firstFailIdx": null
+          }
+        }
+      ],
+      "combinedNet": 11.890000000000327,
+      "profitableFolds": 2,
+      "failedFolds": 1
+    },
+    "0.32": {
+      "spread": 0.32,
+      "folds": [
+        {
+          "testSession": {
+            "id": "2026-11-02",
+            "start": 0,
+            "end": 1377
+          },
+          "chosen": {
+            "setup": {
+              "id": "limit2|rsi|stop5|tp1.5",
+              "entry": {
+                "type": "limit",
+                "offset": 2
+              },
+              "filter": "rsi",
+              "stop": 5,
+              "exit": {
+                "type": "tp",
+                "mult": 1.5
+              }
+            },
+            "train": {
+              "net": 43.80000000000018,
+              "maxDD": 13.340000000000146,
+              "failed": false,
+              "firstFailIdx": null
+            }
+          },
+          "test": {
+            "trades": [
+              {
+                "dir": 1,
+                "entryIdx": 313,
+                "exitIdx": 339,
+                "entry": 3906.04,
+                "exit": 3900.94,
+                "pnl": -5.099999999999909,
+                "reason": "stop"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 638,
+                "exitIdx": 743,
+                "entry": 3900.37,
+                "exit": 3905.47,
+                "pnl": -5.099999999999909,
+                "reason": "stop"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 823,
+                "exitIdx": 868,
+                "entry": 3903.58,
+                "exit": 3908.68,
+                "pnl": -5.099999999999909,
+                "reason": "stop"
+              }
+            ],
+            "net": -15.299999999999727,
+            "maxDD": 15.529999999999745,
+            "failed": false,
+            "firstFailIdx": null
+          }
+        },
+        {
+          "testSession": {
+            "id": "2026-11-03",
+            "start": 1378,
+            "end": 2755
+          },
+          "chosen": {
+            "setup": {
+              "id": "limit1|none|stop12|tp1",
+              "entry": {
+                "type": "limit",
+                "offset": 1
+              },
+              "filter": "none",
+              "stop": 12,
+              "exit": {
+                "type": "tp",
+                "mult": 1
+              }
+            },
+            "train": {
+              "net": 69.1599999999994,
+              "maxDD": 31.780000000000655,
+              "failed": false,
+              "firstFailIdx": null
+            }
+          },
+          "test": {
+            "trades": [
+              {
+                "dir": -1,
+                "entryIdx": 1537,
+                "exitIdx": 1642,
+                "entry": 3947.69,
+                "exit": 3935.69,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": 1,
+                "entryIdx": 2112,
+                "exitIdx": 2204,
+                "entry": 3908.26,
+                "exit": 3920.26,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 2325,
+                "exitIdx": 2352,
+                "entry": 3945.87,
+                "exit": 3933.87,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": 1,
+                "entryIdx": 2520,
+                "exitIdx": 2634,
+                "entry": 3931.66,
+                "exit": 3919.56,
+                "pnl": -12.099999999999909,
+                "reason": "stop"
+              }
+            ],
+            "net": 23.90000000000009,
+            "maxDD": 14.400000000000091,
+            "failed": false,
+            "firstFailIdx": null
+          }
+        },
+        {
+          "testSession": {
+            "id": "2026-11-04",
+            "start": 2756,
+            "end": 4133
+          },
+          "chosen": {
+            "setup": {
+              "id": "market|rsi|stop12|trail",
+              "entry": {
+                "type": "market"
+              },
+              "filter": "rsi",
+              "stop": 12,
+              "exit": {
+                "type": "trail"
+              }
+            },
+            "train": {
+              "net": 138.8499999999999,
+              "maxDD": 20.730000000000018,
+              "failed": false,
+              "firstFailIdx": null
+            }
+          },
+          "test": {
+            "trades": [
+              {
+                "dir": -1,
+                "entryIdx": 2854,
+                "exitIdx": 2875,
+                "entry": 3921.82,
+                "exit": 3933.2400000000002,
+                "pnl": -11.420000000000073,
+                "reason": "trail"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 2959,
+                "exitIdx": 2967,
+                "entry": 3939.38,
+                "exit": 3944.54,
+                "pnl": -5.1599999999998545,
+                "reason": "fail"
+              }
+            ],
+            "net": -16.579999999999927,
+            "maxDD": 16.579999999999927,
+            "failed": true,
+            "firstFailIdx": 2967
+          }
+        },
+        {
+          "testSession": {
+            "id": "2026-11-05",
+            "start": 4134,
+            "end": 5272
+          },
+          "chosen": {
+            "setup": {
+              "id": "limit1|none|stop12|tp1",
+              "entry": {
+                "type": "limit",
+                "offset": 1
+              },
+              "filter": "none",
+              "stop": 12,
+              "exit": {
+                "type": "tp",
+                "mult": 1
+              }
+            },
+            "train": {
+              "net": 85.67000000000007,
+              "maxDD": 28.01000000000022,
+              "failed": false,
+              "firstFailIdx": null
+            }
+          },
+          "test": {
+            "trades": [
+              {
+                "dir": 1,
+                "entryIdx": 4581,
+                "exitIdx": 4860,
+                "entry": 4123.69,
+                "exit": 4135.69,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": 1,
+                "entryIdx": 5023,
+                "exitIdx": 5065,
+                "entry": 4125.78,
+                "exit": 4113.679999999999,
+                "pnl": -12.100000000000364,
+                "reason": "stop"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 5070,
+                "exitIdx": 5074,
+                "entry": 4097.34,
+                "exit": 4109.4400000000005,
+                "pnl": -12.100000000000364,
+                "reason": "stop"
+              },
+              {
+                "dir": 1,
+                "entryIdx": 5178,
+                "exitIdx": 5192,
+                "entry": 4108.78,
+                "exit": 4120.78,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 5247,
+                "exitIdx": 5272,
+                "entry": 4105.82,
+                "exit": 4098.23,
+                "pnl": 7.5900000000001455,
+                "reason": "session-end"
+              }
+            ],
+            "net": 7.389999999999418,
+            "maxDD": 31.780000000000655,
+            "failed": false,
+            "firstFailIdx": null
+          }
+        }
+      ],
+      "combinedNet": -0.5900000000001455,
+      "profitableFolds": 2,
+      "failedFolds": 1
+    },
+    "0.48": {
+      "spread": 0.48,
+      "folds": [
+        {
+          "testSession": {
+            "id": "2026-11-02",
+            "start": 0,
+            "end": 1377
+          },
+          "chosen": {
+            "setup": {
+              "id": "limit2|rsi|stop5|tp1.5",
+              "entry": {
+                "type": "limit",
+                "offset": 2
+              },
+              "filter": "rsi",
+              "stop": 5,
+              "exit": {
+                "type": "tp",
+                "mult": 1.5
+              }
+            },
+            "train": {
+              "net": 43.64000000000033,
+              "maxDD": 13.5,
+              "failed": false,
+              "firstFailIdx": null
+            }
+          },
+          "test": {
+            "trades": [
+              {
+                "dir": 1,
+                "entryIdx": 313,
+                "exitIdx": 339,
+                "entry": 3906.04,
+                "exit": 3900.94,
+                "pnl": -5.099999999999909,
+                "reason": "stop"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 638,
+                "exitIdx": 743,
+                "entry": 3900.37,
+                "exit": 3905.47,
+                "pnl": -5.099999999999909,
+                "reason": "stop"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 823,
+                "exitIdx": 868,
+                "entry": 3903.58,
+                "exit": 3908.68,
+                "pnl": -5.099999999999909,
+                "reason": "stop"
+              }
+            ],
+            "net": -15.299999999999727,
+            "maxDD": 15.529999999999745,
+            "failed": false,
+            "firstFailIdx": null
+          }
+        },
+        {
+          "testSession": {
+            "id": "2026-11-03",
+            "start": 1378,
+            "end": 2755
+          },
+          "chosen": {
+            "setup": {
+              "id": "limit1|none|stop12|tp1",
+              "entry": {
+                "type": "limit",
+                "offset": 1
+              },
+              "filter": "none",
+              "stop": 12,
+              "exit": {
+                "type": "tp",
+                "mult": 1
+              }
+            },
+            "train": {
+              "net": 68.83999999999969,
+              "maxDD": 31.780000000000655,
+              "failed": false,
+              "firstFailIdx": null
+            }
+          },
+          "test": {
+            "trades": [
+              {
+                "dir": -1,
+                "entryIdx": 1537,
+                "exitIdx": 1642,
+                "entry": 3947.69,
+                "exit": 3935.69,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": 1,
+                "entryIdx": 2112,
+                "exitIdx": 2204,
+                "entry": 3908.26,
+                "exit": 3920.26,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 2325,
+                "exitIdx": 2352,
+                "entry": 3945.87,
+                "exit": 3933.87,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": 1,
+                "entryIdx": 2521,
+                "exitIdx": 2634,
+                "entry": 3931.66,
+                "exit": 3919.56,
+                "pnl": -12.099999999999909,
+                "reason": "stop"
+              }
+            ],
+            "net": 23.90000000000009,
+            "maxDD": 14.400000000000091,
+            "failed": false,
+            "firstFailIdx": null
+          }
+        },
+        {
+          "testSession": {
+            "id": "2026-11-04",
+            "start": 2756,
+            "end": 4133
+          },
+          "chosen": {
+            "setup": {
+              "id": "market|rsi|stop12|trail",
+              "entry": {
+                "type": "market"
+              },
+              "filter": "rsi",
+              "stop": 12,
+              "exit": {
+                "type": "trail"
+              }
+            },
+            "train": {
+              "net": 136.13000000000238,
+              "maxDD": 20.889999999999873,
+              "failed": false,
+              "firstFailIdx": null
+            }
+          },
+          "test": {
+            "trades": [
+              {
+                "dir": -1,
+                "entryIdx": 2854,
+                "exitIdx": 2875,
+                "entry": 3921.82,
+                "exit": 3933.4,
+                "pnl": -11.579999999999927,
+                "reason": "trail"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 2959,
+                "exitIdx": 2967,
+                "entry": 3939.38,
+                "exit": 3944.7,
+                "pnl": -5.319999999999709,
+                "reason": "fail"
+              }
+            ],
+            "net": -16.899999999999636,
+            "maxDD": 16.899999999999636,
+            "failed": true,
+            "firstFailIdx": 2967
+          }
+        },
+        {
+          "testSession": {
+            "id": "2026-11-05",
+            "start": 4134,
+            "end": 5272
+          },
+          "chosen": {
+            "setup": {
+              "id": "limit1|none|stop12|tp1",
+              "entry": {
+                "type": "limit",
+                "offset": 1
+              },
+              "filter": "none",
+              "stop": 12,
+              "exit": {
+                "type": "tp",
+                "mult": 1
+              }
+            },
+            "train": {
+              "net": 85.51000000000022,
+              "maxDD": 28.01000000000022,
+              "failed": false,
+              "firstFailIdx": null
+            }
+          },
+          "test": {
+            "trades": [
+              {
+                "dir": 1,
+                "entryIdx": 4581,
+                "exitIdx": 4860,
+                "entry": 4123.69,
+                "exit": 4135.69,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": 1,
+                "entryIdx": 5023,
+                "exitIdx": 5065,
+                "entry": 4125.78,
+                "exit": 4113.679999999999,
+                "pnl": -12.100000000000364,
+                "reason": "stop"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 5070,
+                "exitIdx": 5074,
+                "entry": 4097.34,
+                "exit": 4109.4400000000005,
+                "pnl": -12.100000000000364,
+                "reason": "stop"
+              },
+              {
+                "dir": 1,
+                "entryIdx": 5178,
+                "exitIdx": 5192,
+                "entry": 4108.78,
+                "exit": 4120.78,
+                "pnl": 12,
+                "reason": "tp"
+              },
+              {
+                "dir": -1,
+                "entryIdx": 5247,
+                "exitIdx": 5272,
+                "entry": 4105.82,
+                "exit": 4098.389999999999,
+                "pnl": 7.430000000000291,
+                "reason": "session-end"
+              }
+            ],
+            "net": 7.229999999999563,
+            "maxDD": 31.780000000000655,
+            "failed": false,
+            "firstFailIdx": null
+          }
+        }
+      ],
+      "combinedNet": -1.069999999999709,
+      "profitableFolds": 2,
+      "failedFolds": 1
+    }
+  },
+  "random": {
+    "runs": 1000,
+    "seed": 20261106,
+    "pctBelow": 71.8,
+    "p5": -53.039999999998145,
+    "p50": -11.230000000000018,
+    "p95": 55.129999999999654
+  },
+  "indicatorDefault": {
+    "trades": [
+      {
+        "dir": -1,
+        "entryIdx": 1537,
+        "exitIdx": 1565,
+        "entry": 3946.68,
+        "exit": 3942.937460455,
+        "pnl": 3.7425395449999996,
+        "reason": "tp"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 2021,
+        "exitIdx": 2069,
+        "entry": 3908.81,
+        "exit": 3904.59,
+        "pnl": -4.2199999999998,
+        "reason": "opposite"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 2069,
+        "exitIdx": 2111,
+        "entry": 3904.59,
+        "exit": 3909.44,
+        "pnl": -4.849999999999909,
+        "reason": "opposite"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 2111,
+        "exitIdx": 2134,
+        "entry": 3909.44,
+        "exit": 3903.37,
+        "pnl": -6.070000000000164,
+        "reason": "opposite"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 2134,
+        "exitIdx": 2144,
+        "entry": 3903.37,
+        "exit": 3905.44,
+        "pnl": -2.0700000000001637,
+        "reason": "opposite"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 2144,
+        "exitIdx": 2163,
+        "entry": 3905.44,
+        "exit": 3901.3,
+        "pnl": -4.139999999999873,
+        "reason": "opposite"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 2163,
+        "exitIdx": 2181,
+        "entry": 3901.3,
+        "exit": 3913.08,
+        "pnl": -11.779999999999745,
+        "reason": "opposite"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 2181,
+        "exitIdx": 2197,
+        "entry": 3913.08,
+        "exit": 3916.6086771423575,
+        "pnl": 3.5286771423575374,
+        "reason": "tp"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 2324,
+        "exitIdx": 2337,
+        "entry": 3944.83,
+        "exit": 3941.0111968087804,
+        "pnl": 3.8188031912195584,
+        "reason": "tp"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 2520,
+        "exitIdx": 2562,
+        "entry": 3932.7799999999997,
+        "exit": 3928.79,
+        "pnl": -3.9899999999997817,
+        "reason": "opposite"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 2562,
+        "exitIdx": 2589,
+        "entry": 3928.79,
+        "exit": 3925.1051508132027,
+        "pnl": 3.684849186797237,
+        "reason": "tp"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 2719,
+        "exitIdx": 2726,
+        "entry": 3923.67,
+        "exit": 3927.182437439665,
+        "pnl": 3.5124374396650637,
+        "reason": "tp"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 2854,
+        "exitIdx": 2892,
+        "entry": 3921.82,
+        "exit": 3945,
+        "pnl": -23.179999999999836,
+        "reason": "opposite"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 2892,
+        "exitIdx": 2892,
+        "entry": 3945,
+        "exit": 3948.6305176943206,
+        "pnl": 3.630517694320588,
+        "reason": "tp"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 2959,
+        "exitIdx": 2966,
+        "entry": 3939.38,
+        "exit": 3935.591350869251,
+        "pnl": 3.788649130749036,
+        "reason": "tp"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 3063,
+        "exitIdx": 3102,
+        "entry": 3947.91,
+        "exit": 3951.7285057257527,
+        "pnl": 3.818505725752857,
+        "reason": "tp"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 3470,
+        "exitIdx": 3477,
+        "entry": 4042.45,
+        "exit": 4044.49,
+        "pnl": -2.0399999999999636,
+        "reason": "opposite"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 3477,
+        "exitIdx": 3483,
+        "entry": 4044.49,
+        "exit": 4040.6,
+        "pnl": -3.8899999999998727,
+        "reason": "opposite"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 3483,
+        "exitIdx": 3543,
+        "entry": 4040.6,
+        "exit": 4036.3469064108913,
+        "pnl": 4.25309358910863,
+        "reason": "tp"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 3571,
+        "exitIdx": 3582,
+        "entry": 4043.7,
+        "exit": 4040.1,
+        "pnl": -3.599999999999909,
+        "reason": "opposite"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 3582,
+        "exitIdx": 3594,
+        "entry": 4040.1,
+        "exit": 4043.73,
+        "pnl": -3.630000000000109,
+        "reason": "opposite"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 3594,
+        "exitIdx": 3596,
+        "entry": 4043.73,
+        "exit": 4047.9814046666734,
+        "pnl": 4.251404666673352,
+        "reason": "tp"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 3613,
+        "exitIdx": 3625,
+        "entry": 4037.6,
+        "exit": 4033.3403802861935,
+        "pnl": 4.259619713806387,
+        "reason": "tp"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 3645,
+        "exitIdx": 3656,
+        "entry": 4042.67,
+        "exit": 4046.969900781502,
+        "pnl": 4.299900781501947,
+        "reason": "tp"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 3683,
+        "exitIdx": 3699,
+        "entry": 4034.48,
+        "exit": 4045.43,
+        "pnl": -10.949999999999818,
+        "reason": "opposite"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 3699,
+        "exitIdx": 3717,
+        "entry": 4045.43,
+        "exit": 4039.67,
+        "pnl": -5.7599999999997635,
+        "reason": "opposite"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 3717,
+        "exitIdx": 3721,
+        "entry": 4039.67,
+        "exit": 4035.3081442903676,
+        "pnl": 4.361855709632437,
+        "reason": "tp"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 3772,
+        "exitIdx": 3812,
+        "entry": 4047.46,
+        "exit": 4051.8201343582004,
+        "pnl": 4.360134358200412,
+        "reason": "tp"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 3938,
+        "exitIdx": 3988,
+        "entry": 4061.35,
+        "exit": 4057.0142865181397,
+        "pnl": 4.335713481860239,
+        "reason": "tp"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 4031,
+        "exitIdx": 4072,
+        "entry": 4065.3799999999997,
+        "exit": 4060.17,
+        "pnl": -5.209999999999582,
+        "reason": "opposite"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 4072,
+        "exitIdx": 4083,
+        "entry": 4060.17,
+        "exit": 4063.45,
+        "pnl": -3.2799999999997453,
+        "reason": "opposite"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 4083,
+        "exitIdx": 4117,
+        "entry": 4063.45,
+        "exit": 4059.86,
+        "pnl": -3.5899999999996908,
+        "reason": "opposite"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 4159,
+        "exitIdx": 4183,
+        "entry": 4062.7999999999997,
+        "exit": 4066.880098671836,
+        "pnl": 4.080098671836367,
+        "reason": "tp"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 4499,
+        "exitIdx": 4507,
+        "entry": 4133,
+        "exit": 4128.538325573924,
+        "pnl": 4.4616744260756604,
+        "reason": "tp"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 4581,
+        "exitIdx": 4592,
+        "entry": 4124.849999999999,
+        "exit": 4129.399470092363,
+        "pnl": 4.549470092363663,
+        "reason": "tp"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 4631,
+        "exitIdx": 4637,
+        "entry": 4120.28,
+        "exit": 4115.77107793885,
+        "pnl": 4.50892206114986,
+        "reason": "tp"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 4678,
+        "exitIdx": 4732,
+        "entry": 4128.29,
+        "exit": 4132.778126452012,
+        "pnl": 4.488126452011784,
+        "reason": "tp"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 4778,
+        "exitIdx": 4835,
+        "entry": 4123.84,
+        "exit": 4127.91,
+        "pnl": -4.069999999999709,
+        "reason": "opposite"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 4835,
+        "exitIdx": 4859,
+        "entry": 4127.91,
+        "exit": 4132.256046924455,
+        "pnl": 4.34604692445555,
+        "reason": "tp"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 4916,
+        "exitIdx": 4928,
+        "entry": 4131.39,
+        "exit": 4127.122282207273,
+        "pnl": 4.267717792727126,
+        "reason": "tp"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 5021,
+        "exitIdx": 5055,
+        "entry": 4126.95,
+        "exit": 4131.207189424772,
+        "pnl": 4.25718942477215,
+        "reason": "tp"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 5070,
+        "exitIdx": 5137,
+        "entry": 4096.27,
+        "exit": 4091.86080535995,
+        "pnl": 4.409194640050373,
+        "reason": "tp"
+      },
+      {
+        "dir": 1,
+        "entryIdx": 5178,
+        "exitIdx": 5179,
+        "entry": 4109.94,
+        "exit": 4114.713070892346,
+        "pnl": 4.773070892346368,
+        "reason": "tp"
+      },
+      {
+        "dir": -1,
+        "entryIdx": 5247,
+        "exitIdx": 5265,
+        "entry": 4104.82,
+        "exit": 4099.999935662265,
+        "pnl": 4.820064337734948,
+        "reason": "tp"
+      }
+    ],
+    "net": 2.288277072171695,
+    "maxDD": 52.703541738046624,
+    "failed": true,
+    "firstFailIdx": 2161
+  },
+  "final": {
+    "setup": {
+      "id": "limit1|none|stop12|tp1",
+      "entry": {
+        "type": "limit",
+        "offset": 1
+      },
+      "filter": "none",
+      "stop": 12,
+      "exit": {
+        "type": "tp",
+        "mult": 1
+      }
+    },
+    "result": {
+      "trades": [
+        {
+          "dir": 1,
+          "entryIdx": 312,
+          "exitIdx": 402,
+          "entry": 3907.04,
+          "exit": 3919.04,
+          "pnl": 12,
+          "reason": "tp"
+        },
+        {
+          "dir": -1,
+          "entryIdx": 461,
+          "exitIdx": 556,
+          "entry": 3906.69,
+          "exit": 3894.69,
+          "pnl": 12,
+          "reason": "tp"
+        },
+        {
+          "dir": 1,
+          "entryIdx": 613,
+          "exitIdx": 875,
+          "entry": 3902.26,
+          "exit": 3914.26,
+          "pnl": 12,
+          "reason": "tp"
+        },
+        {
+          "dir": -1,
+          "entryIdx": 1116,
+          "exitIdx": 1225,
+          "entry": 3959.03,
+          "exit": 3947.03,
+          "pnl": 12,
+          "reason": "tp"
+        },
+        {
+          "dir": -1,
+          "entryIdx": 1537,
+          "exitIdx": 1642,
+          "entry": 3947.69,
+          "exit": 3935.69,
+          "pnl": 12,
+          "reason": "tp"
+        },
+        {
+          "dir": 1,
+          "entryIdx": 2023,
+          "exitIdx": 2204,
+          "entry": 3907.63,
+          "exit": 3919.63,
+          "pnl": 12,
+          "reason": "tp"
+        },
+        {
+          "dir": -1,
+          "entryIdx": 2325,
+          "exitIdx": 2352,
+          "entry": 3945.87,
+          "exit": 3933.87,
+          "pnl": 12,
+          "reason": "tp"
+        },
+        {
+          "dir": 1,
+          "entryIdx": 2520,
+          "exitIdx": 2634,
+          "entry": 3931.66,
+          "exit": 3919.56,
+          "pnl": -12.099999999999909,
+          "reason": "stop"
+        },
+        {
+          "dir": -1,
+          "entryIdx": 2855,
+          "exitIdx": 2875,
+          "entry": 3922.81,
+          "exit": 3934.91,
+          "pnl": -12.099999999999909,
+          "reason": "stop"
+        },
+        {
+          "dir": 1,
+          "entryIdx": 2892,
+          "exitIdx": 2895,
+          "entry": 3943.84,
+          "exit": 3955.84,
+          "pnl": 12,
+          "reason": "tp"
+        },
+        {
+          "dir": -1,
+          "entryIdx": 2960,
+          "exitIdx": 2997,
+          "entry": 3940.5,
+          "exit": 3928.5,
+          "pnl": 12,
+          "reason": "tp"
+        },
+        {
+          "dir": -1,
+          "entryIdx": 3470,
+          "exitIdx": 3628,
+          "entry": 4043.45,
+          "exit": 4031.45,
+          "pnl": 12,
+          "reason": "tp"
+        },
+        {
+          "dir": 1,
+          "entryIdx": 3645,
+          "exitIdx": 3731,
+          "entry": 4041.51,
+          "exit": 4029.4100000000003,
+          "pnl": -12.099999999999909,
+          "reason": "stop"
+        },
+        {
+          "dir": -1,
+          "entryIdx": 3940,
+          "exitIdx": 4125,
+          "entry": 4062.35,
+          "exit": 4060.22,
+          "pnl": 2.130000000000109,
+          "reason": "forced"
+        },
+        {
+          "dir": 1,
+          "entryIdx": 4159,
+          "exitIdx": 4212,
+          "entry": 4061.64,
+          "exit": 4073.64,
+          "pnl": 12,
+          "reason": "tp"
+        },
+        {
+          "dir": 1,
+          "entryIdx": 4581,
+          "exitIdx": 4860,
+          "entry": 4123.69,
+          "exit": 4135.69,
+          "pnl": 12,
+          "reason": "tp"
+        },
+        {
+          "dir": 1,
+          "entryIdx": 5023,
+          "exitIdx": 5065,
+          "entry": 4125.78,
+          "exit": 4113.679999999999,
+          "pnl": -12.100000000000364,
+          "reason": "stop"
+        },
+        {
+          "dir": -1,
+          "entryIdx": 5070,
+          "exitIdx": 5076,
+          "entry": 4097.34,
+          "exit": 4109.4400000000005,
+          "pnl": -12.100000000000364,
+          "reason": "stop"
+        },
+        {
+          "dir": 1,
+          "entryIdx": 5178,
+          "exitIdx": 5192,
+          "entry": 4108.78,
+          "exit": 4120.78,
+          "pnl": 12,
+          "reason": "tp"
+        },
+        {
+          "dir": -1,
+          "entryIdx": 5247,
+          "exitIdx": 5272,
+          "entry": 4105.82,
+          "exit": 4098.07,
+          "pnl": 7.75,
+          "reason": "session-end"
+        }
+      ],
+      "net": 105.37999999999965,
+      "maxDD": 31.780000000000655,
+      "failed": false,
+      "firstFailIdx": null
+    }
+  },
+  "verdict": {
+    "label": "no demonstrated edge",
+    "checks": [
+      {
+        "name": "Profit on at least 3 test days",
+        "passed": false,
+        "detail": "2 of 4 profitable"
+      },
+      {
+        "name": "No failed test day",
+        "passed": false,
+        "detail": "1 failed"
+      },
+      {
+        "name": "Beats 95% of random runs",
+        "passed": false,
+        "detail": "71.8% of random runs below"
+      },
+      {
+        "name": "Positive at the $0.32 spread",
+        "passed": false,
+        "detail": "combined net -0.5900000000001455"
+      }
+    ]
+  }
+}

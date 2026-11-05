@@ -6,6 +6,10 @@ import { runFold, runCv, selectFinal, verdict } from './cv.mjs';
 import { makeRng, randomRun, randomComparison, indicatorDefault } from './references.mjs';
 import { excursionStudy } from './excursion.mjs';
 import { ema, rsi, atr, resample, buildFeatures } from './indicators.mjs';
+import { renderReport } from './report.mjs';
+import { run as runBacktest } from '../backtest.mjs';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const near = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) <= eps, `${a} !~ ${b}`);
 const HEADER = 'time,open,high,low,close,volume';
@@ -426,5 +430,41 @@ near(x1.adverse.max, 2.16); near(x1.favourable.max, 3.84);
 assert.equal(x1.adverseReach[0].share, 0);
 const x0 = excursionStudy(xb, feat(4), one(xb), { spread: 0.16 });
 assert.equal(x0.count, 0); assert.equal(x0.adverse.median, null);
+
+const stats0 = { median: null, p75: null, p90: null, max: null };
+const noEdge = {
+  meta: { csv: 'x.csv', bars: 10, sessions: 4, seed: 1, gridSize: 180 },
+  excursion: { count: 0, adverse: stats0, favourable: stats0, adverseReach: [] },
+  cv: { '0.16': none, '0.32': none, '0.48': none },
+  random: { runs: 5, seed: 1, pctBelow: 0, p5: 0, p50: 0, p95: 0 },
+  indicatorDefault: { net: -20, maxDD: 30, failed: true, firstFailIdx: 5, trades: [] },
+  final: { setup: { id: 'looks-good' }, result: { net: 9, maxDD: 2, failed: false, trades: [] } },
+  verdict: { label: 'no demonstrated edge', checks: [{ name: 'c', passed: false, detail: 'd' }] },
+};
+const md = renderReport(noEdge);
+assert.match(md, /no demonstrated edge/i);
+assert.match(md, /no setup is recommended/i);
+assert.doesNotMatch(md, /looks-good/);
+assert.doesNotMatch(md, /NaN|Infinity|undefined/);
+assert.match(md, /no trade/i);
+for (const s of [/in-sample|screen/i, /training session follows/i, /demo/i]) assert.match(md, s);
+
+const goodMd = renderReport({ ...noEdge, verdict: { label: 'demo candidate', checks: [] } });
+assert.match(goodMd, /looks-good/);
+assert.match(goodMd, /in-sample/i);
+
+// Full run on the real file, if present, from another directory
+const repoCsv = fileURLToPath(new URL('../../data/XAUUSD_EIGHTCAP_1m.csv', import.meta.url));
+if (existsSync(repoCsv)) {
+  process.chdir(process.env.TEMP ?? '/');
+  const out = runBacktest();
+  assert.equal(out.results.meta.bars, 5273);
+  assert.equal(out.results.meta.sessions, 4);
+  assert.equal(out.results.meta.gridSize, 180);
+  assert.ok(Math.abs(out.results.excursion.count - 58) <= 5, `signals ${out.results.excursion.count}`);
+  assert.ok(existsSync(out.mdPath) && existsSync(out.jsonPath));
+  assert.deepEqual(runBacktest().results, out.results);
+}
+
 
 console.log('all tests passed');

@@ -13,6 +13,8 @@ Black-box reverse-engineering of the **protected "MoonRush V2" TradingView indic
 - `scripts/*.mjs` — Node ESM tools that read live MoonRush state over CDP and brute-force-fit its parameters (`fit`, `probe`, `verify`, `mr_inputs`, `mr_finalize`, `mr_signal`).
 - `apps/` — long-running services (not one-shot scripts): `watch-moonrush.mjs` (Discord signal watcher) + its sibling test.
 - `pines/` — Pine v5 reconstructions: `MoonRushV2_replica.pine` (full behaves-alike, the main deliverable), `MoonRushV2_reconstruction.pine` (annotated spec version), `MoonRushV2_strategy.pine`.
+- `scripts/backtest.mjs` + `scripts/backtest/` — offline backtester of MoonRush signals (no CDP dependency); run with `node scripts/backtest.mjs [csv]`, tested with `node scripts/backtest/backtest.test.mjs`.
+- `reports/` — generated backtest results (`moonrush-backtest.md` and `.json`).
 - `docs/superpowers/specs/` — approved designs not yet built (Discord watcher).
 - `reverse-moonrush-v2.md` — recovered model + setup + procedure.
 
