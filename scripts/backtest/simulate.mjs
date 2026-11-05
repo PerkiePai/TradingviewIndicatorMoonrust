@@ -92,7 +92,11 @@ export function simulate(bars, features, sessions, setup, opts) {
 
       // 1a. Open: close on an opposite signal, at the open on the position's exit side.
       if (pos?.closeNext) {
-        closePos(i, pos.dir > 0 ? b.o : b.o + spread, 'opposite');
+        const px = pos.dir > 0 ? b.o : b.o + spread;
+        // The stop stays live: an open already beyond it fills as a stop, with slippage.
+        const gapped = pos.sl != null && (pos.dir > 0 ? px <= pos.sl : px >= pos.sl);
+        if (gapped) closePos(i, px - pos.dir * slippage, stopReason);
+        else closePos(i, px, 'opposite');
         const eq = startEquity + realised;
         track(eq);
         if (eq <= failEquity) {

@@ -283,6 +283,14 @@ assert.equal(R.failed, true); assert.equal(R.firstFailIdx, 3);
 assert.equal(R.trades.length, 1); assert.equal(R.trades[0].reason, 'opposite');
 near(R.net, -20); near(R.maxDD, 20);
 
+// An open already beyond the stop fills as a stop with slippage, even when an opposite signal is pending
+R = run([FLAT, FLAT, FLAT, [96, 97, 95, 96], FLAT], { 0: 1, 2: -1 }, OPP);
+assert.equal(R.trades[0].reason, 'stop'); assert.equal(R.trades[0].exitIdx, 3);
+near(R.trades[0].exit, 95.9); near(R.trades[0].pnl, -4.26);
+R = run([FLAT, FLAT, FLAT, [104, 104.5, 103.5, 104], FLAT], { 0: -1, 2: 1 }, OPP);
+assert.equal(R.trades[0].reason, 'stop'); assert.equal(R.trades[0].exitIdx, 3);
+near(R.trades[0].exit, 104.26); near(R.trades[0].pnl, -4.26);
+
 // Null, undefined and NaN mean no signal (not a short)
 const nb = mkBars(flatN(4));
 const nanSig = { ...feat(4), signal: [NaN, null, undefined, NaN] };
