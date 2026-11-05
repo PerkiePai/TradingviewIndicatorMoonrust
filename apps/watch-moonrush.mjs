@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { spawn } from 'node:child_process';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const STATE_FILE = resolve(__dir, 'last-signal.json');
@@ -48,22 +49,52 @@ async function postDiscord(webhookUrl, label, rows) {
   if (!res.ok) throw new Error(`Discord POST ${res.status}`);
 }
 
+// --- CDP helpers ---
+
+// HTTP endpoint — works without taking the WebSocket debugger slot held by the MCP server.
+async function isCdpAlive() {
+  try {
+    const r = await fetch('http://localhost:9222/json/version');
+    return r.ok;
+  } catch { return false; }
+}
+
+// Spawn a subprocess per tick so each call gets a fresh CDP connection slot.
+// shortcut: one subprocess per tick; fine at 20s interval, adds ~200ms latency
+function fetchPineTables(corePath, studyFilter) {
+  return new Promise((resolve, reject) => {
+    const script = `
+const { data } = await import(${JSON.stringify(corePath)});
+const r = await data.getPineTables({ study_filter: ${JSON.stringify(studyFilter)} });
+process.stdout.write(JSON.stringify(r), () => process.exit(0));
+`;
+    const child = spawn('node', ['--input-type=module', '--eval', script], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      timeout: 15000,
+    });
+    let out = '';
+    child.stdout.on('data', d => out += d);
+    child.on('close', (code) => {
+      if (code === 0) { try { resolve(JSON.parse(out)); } catch (e) { reject(e); } }
+      else reject(new Error(`getPineTables subprocess exit ${code}`));
+    });
+    child.on('error', reject);
+  });
+}
+
 // --- Poll tick ---
 
-async function tick(deps) {
-  const { data, health, webhookUrl, studyFilter, symbolLabel } = deps;
+async function tick(corePath, webhookUrl, studyFilter, symbolLabel) {
+  const ok = await isCdpAlive();
+  if (!ok) { console.log('[watcher] CDP not reachable — skipping tick'); return; }
 
-  const ok = await health.healthCheck().catch(() => false);
-  if (!ok) { console.log('[watcher] CDP not healthy — skipping tick'); return; }
-
-  const { studies } = await data.getPineTables({ study_filter: studyFilter });
+  const { studies } = await fetchPineTables(corePath, studyFilter);
   if (!studies.length) { console.warn('[watcher] indicator not visible — skipping tick'); return; }
 
   const rows = extractSignalRows(studies);
   const lastSig = await loadSignature();
 
   if (lastSig === null) {
-    // First run: establish baseline silently so the next change fires.
     if (rows.length) await saveSignature(computeSignature(rows));
     console.log('[watcher] baseline recorded');
     return;
@@ -90,10 +121,10 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   if (!TV_MCP_CORE)         { console.error('TV_MCP_CORE is required');         process.exit(1); }
   if (!DISCORD_WEBHOOK_URL) { console.error('DISCORD_WEBHOOK_URL is required'); process.exit(1); }
 
-  const { data, health } = await import(TV_MCP_CORE);
-  const deps = { data, health, webhookUrl: DISCORD_WEBHOOK_URL, studyFilter: STUDY_FILTER, symbolLabel: SYMBOL_LABEL };
+  const run = () => tick(TV_MCP_CORE, DISCORD_WEBHOOK_URL, STUDY_FILTER, SYMBOL_LABEL)
+    .catch(e => console.error('[watcher]', e.message));
 
   console.log(`[watcher] starting — symbol=${SYMBOL_LABEL} filter=${STUDY_FILTER} interval=${INTERVAL_MS}ms`);
-  await tick(deps);
-  setInterval(() => tick(deps).catch(e => console.error('[watcher]', e.message)), Number(INTERVAL_MS));
+  await run();
+  setInterval(run, Number(INTERVAL_MS));
 }
