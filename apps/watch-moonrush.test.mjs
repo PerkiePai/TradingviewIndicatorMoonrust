@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { extractSignalRows, computeSignature, extractDirection, isNewSignal } from './watch-moonrush.mjs';
+import { extractSignalRows, computeSignature, extractDirection, isNewSignal, stateKey } from './watch-moonrush.mjs';
 
 const STUDIES = [{
   name: 'MoonRush V2',
@@ -63,5 +63,9 @@ const STUDIES_STATS_CHANGED = [{
 }];
 const sigAfterStats = computeSignature(extractSignalRows(STUDIES_STATS_CHANGED));
 assert.equal(sigAfterStats, sig, 'stats-only change leaves signature unchanged');
+
+assert.notEqual(stateKey({symbol:'XAUUSD',resolution:'1'}), stateKey({symbol:'XAUUSD',resolution:'15'}), 'timeframe changes state key');
+assert.notEqual(stateKey({symbol:'A',resolution:'1'}), stateKey({symbol:'B',resolution:'1'}), 'symbol changes state key');
+assert.equal(stateKey(null), 'unknown');
 
 console.log('All tests passed.');

@@ -35,15 +35,26 @@ export function isNewSignal(rows, lastDir) {
 
 // --- State ---
 
-async function loadDirection() {
-  try {
-    const s = JSON.parse(await readFile(STATE_FILE, 'utf8'));
-    return s.direction ?? null;
-  } catch { return null; }
+// Direction is stored per "symbol|resolution" so switching chart/timeframe never looks like a flip.
+export function stateKey(chart) {
+  return chart ? `${chart.symbol ?? '?'}|${chart.resolution ?? '?'}` : 'unknown';
 }
 
-async function saveDirection(dir) {
-  await writeFile(STATE_FILE, JSON.stringify({ direction: dir }));
+async function readState() {
+  try {
+    const s = JSON.parse(await readFile(STATE_FILE, 'utf8'));
+    return s.directions && typeof s.directions === 'object' ? s.directions : {};
+  } catch { return {}; }
+}
+
+async function loadDirection(key) {
+  return (await readState())[key] ?? null;
+}
+
+async function saveDirection(key, dir) {
+  const directions = await readState();
+  directions[key] = dir;
+  await writeFile(STATE_FILE, JSON.stringify({ directions }));
 }
 
 // --- Discord ---
@@ -75,6 +86,12 @@ function fetchPineTables(corePath, studyFilter) {
     const script = `
 const { data } = await import(${JSON.stringify(corePath)});
 const r = await data.getPineTables({ study_filter: ${JSON.stringify(studyFilter)} });
+try {
+  const o = await data.getOhlcv({ count: 1 });
+  const { evaluate } = await import(${JSON.stringify(corePath.replace(/core\/index\.js$/, 'connection.js'))});
+  const res = await evaluate('window.TradingViewApi._activeChartWidgetWV.value().resolution()');
+  r.chart = { symbol: await evaluate('window.TradingViewApi._activeChartWidgetWV.value().symbol()'), barTime: o.bars[o.bars.length - 1].time, resolution: String(res) };
+} catch {}
 process.stdout.write(JSON.stringify(r), () => process.exit(0));
 `;
     const child = spawn('node', ['--input-type=module', '--eval', script], {
@@ -91,34 +108,54 @@ process.stdout.write(JSON.stringify(r), () => process.exit(0));
   });
 }
 
+// --- TradingView-time scheduling ---
+
+// Resolution string → seconds. Only plain-minute resolutions ("5", "60") are supported.
+export function resolutionToSec(res) {
+  return /^\d+$/.test(String(res)) ? Number(res) * 60 : null;
+}
+
+// ms until startSec after the next bar close, derived from the chart's own last-bar
+// timestamp (epoch, so independent of local timezone/offset), not the local wall clock.
+export function msUntilBarClose(lastBarTimeSec, intervalSec, startSec, nowMs = Date.now()) {
+  const step = intervalSec * 1000;
+  let next = lastBarTimeSec * 1000 + step + startSec * 1000;
+  if (next <= nowMs) next += Math.ceil((nowMs - next + 1) / step) * step;
+  return next - nowMs;
+}
+
 // --- Poll tick ---
+
+let lastChart = null; // { barTime, resolution } from the TradingView chart
 
 async function tick(corePath, webhookUrl, studyFilter, symbolLabel) {
   const ok = await isCdpAlive();
   if (!ok) { console.log('[watcher] CDP not reachable — skipping tick'); return; }
 
-  const { studies } = await fetchPineTables(corePath, studyFilter);
+  const { studies, chart } = await fetchPineTables(corePath, studyFilter);
+  if (chart) lastChart = chart;
   if (!studies.length) { console.warn('[watcher] indicator not visible — skipping tick'); return; }
 
   const rows = extractSignalRows(studies);
-  const lastDir = await loadDirection();
+  const key = stateKey(chart);
+  const lastDir = await loadDirection(key);
 
   if (lastDir === null) {
-    if (rows.length) await saveDirection(extractDirection(rows));
-    console.log('[watcher] baseline recorded');
+    if (rows.length) await saveDirection(key, extractDirection(rows));
+    console.log(`[watcher] baseline recorded for ${key}`);
     return;
   }
 
   if (isNewSignal(rows, lastDir)) {
     await postDiscord(webhookUrl, symbolLabel, rows); // throw = Discord down → don't persist
-    await saveDirection(extractDirection(rows));
-    console.log('[watcher] signal posted:', rows[0]);
+    await saveDirection(key, extractDirection(rows));
+    console.log(`[watcher] signal posted (${key}):`, rows[0]);
   } else {
-    console.log(`[watcher] ${new Date().toLocaleTimeString()} alive — dir=${extractDirection(rows) ?? '?'}`);
+    console.log(`[watcher] ${new Date().toLocaleTimeString()} alive ${key} — dir=${extractDirection(rows) ?? '?'}`);
   }
 }
 
-// Returns ms until the :05 second of the next N-minute boundary (e.g. :00:05, :05:05, :10:05).
+// Fallback (local clock) when chart time is unavailable. Returns ms until the :05 second of the next N-minute boundary (e.g. :00:05, :05:05, :10:05).
 function msUntilNext(intervalMin, startSec) {
   const now = new Date();
   const target = new Date(now);
@@ -148,8 +185,13 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const run = () => tick(TV_MCP_CORE, DISCORD_WEBHOOK_URL, STUDY_FILTER, SYMBOL_LABEL)
     .catch(e => console.error('[watcher]', e.message));
 
-  const loop = async () => { await run(); setTimeout(loop, msUntilNext(intervalMin, startSec)); };
-  const delay = msUntilNext(intervalMin, startSec);
+  const nextDelay = () => {
+    const sec = lastChart && resolutionToSec(lastChart.resolution);
+    return sec ? msUntilBarClose(lastChart.barTime, sec, startSec) : msUntilNext(intervalMin, startSec);
+  };
+  const loop = async () => { await run(); setTimeout(loop, nextDelay()); };
+  await run(); // prime chart time so the first tick is already aligned to TradingView
+  const delay = nextDelay();
   console.log(`[watcher] starting — symbol=${SYMBOL_LABEL} filter=${STUDY_FILTER} interval=${intervalMin}min @:${String(startSec).padStart(2,'0')}, first tick in ${Math.round(delay / 1000)}s`);
   setTimeout(loop, delay);
 }
