@@ -39,11 +39,10 @@ grpT = "TP / SL"
 plotTP    = input.bool(true, "Plot TP/SL", group=grpT)
 useSL     = input.bool(false, "Use SL", group=grpT)
 atrTPlen  = input.int(100, "ATR For TP/SL", group=grpT)
-tpTF      = input.string("15", "TP ATR Timeframe (blank=chart)", group=grpT)
+tpTF      = input.string("", "TP ATR Timeframe (blank=chart)", group=grpT)
 tpMult    = input.float(0.5, "TP Multiplier", group=grpT)
 slMult    = input.float(1.5, "SL Multiplier", group=grpT)
 showHist  = input.bool(false, "Keep previous TP/SL on chart", group=grpT)
-lineLen   = input.int(30, "TP/SL line length (bars)", minval=1, group=grpT)
 showEvent = input.bool(true, "Show Event Table", group=grpT)
 
 // ================= EMAs (CONFIRMED exact) =================
@@ -92,7 +91,7 @@ plotshape(high >= R3, "R3 Diamond", shape.diamond, location.abovebar, color.new(
 
 // ================= TP / SL + order state =================
 tpAtr = tpTF == "" ? ta.atr(atrTPlen) : request.security(syminfo.tickerid, tpTF, ta.atr(atrTPlen))
-step  = tpAtr * tpMult
+step  = tpAtr * tpMult * 3      // FITTED vs original: TP step = tpMultiplier * 3 * ATR(100) on chart TF (CV 0.0% over 3 signals)
 
 var float eEntry = na
 var int   eDir   = 0
@@ -106,6 +105,7 @@ var bool  hitT2  = false
 var bool  hitT3  = false
 var line[]  lns = array.new<line>()
 var label[] lbs = array.new<label>()
+var int curStart = 0   // first index in lns/lbs belonging to the current (latest) order
 
 // daily stats (Winrate Mode = Day)
 var int   ordersToday = 0
@@ -129,6 +129,11 @@ if ta.change(time("D")) != 0
     ddCnt := 0
 
 if plotTP and (bull or bear)
+    // previous order's lines/labels end exactly where the opposite cross happens
+    if showHist and array.size(lns) > curStart
+        for i = curStart to array.size(lns) - 1
+            line.set_x2(array.get(lns, i), bar_index)
+            label.set_x(array.get(lbs, i), bar_index)
     if not showHist
         if array.size(lbs) > 0
             for i = 0 to array.size(lbs) - 1
@@ -138,7 +143,8 @@ if plotTP and (bull or bear)
             for i = 0 to array.size(lns) - 1
                 line.delete(array.get(lns, i))
             array.clear(lns)
-    eEntry := close
+    curStart := array.size(lns)
+    eEntry := open   // FITTED vs original: entry = OPEN of the cross bar (0.000 error on 3 signals)
     eDir   := bull ? 1 : -1
     eT1 := eEntry + eDir * step
     eT2 := eEntry + eDir * step * 2
@@ -149,16 +155,18 @@ if plotTP and (bull or bear)
     hitT2  := false
     hitT3  := false
     ordersToday += 1
-    array.push(lbs, label.new(bar_index, eEntry, "⭐Entry: " + str.tostring(eEntry, format.mintick) + (bull ? " (BUY)" : " (SELL)"), style = label.style_label_left, color = color.new(color.blue, 0), textcolor = color.white, size = size.tiny))
-    array.push(lns, line.new(bar_index, eEntry, bar_index + lineLen, eEntry, color = color.blue, style = line.style_dashed))
+    // Original-style: thin lines that grow to the latest bar; small dark label at the right end.
+    lblBg = color.new(#131722, 25)
+    array.push(lbs, label.new(bar_index + 1, eEntry, "⭐Entry: " + str.tostring(eEntry, format.mintick), style = label.style_label_left, color = lblBg, textcolor = color.new(color.gray, 0), size = size.tiny))
+    array.push(lns, line.new(bar_index, eEntry, bar_index + 1, eEntry, color = color.new(color.gray, 30), width = 1))
     tps = array.from(eT1, eT2, eT3)
     for i = 0 to 2
         p = array.get(tps, i)
-        array.push(lbs, label.new(bar_index, p, "💵TP" + str.tostring(i + 1) + ": " + str.tostring(p, format.mintick), style = label.style_label_left, color = color.new(color.teal, 0), textcolor = color.white, size = size.tiny))
-        array.push(lns, line.new(bar_index, p, bar_index + lineLen, p, color = color.teal))
+        array.push(lbs, label.new(bar_index + 1, p, "💵TP" + str.tostring(i + 1) + ": " + str.tostring(p, format.mintick), style = label.style_label_left, color = lblBg, textcolor = color.new(color.teal, 0), size = size.tiny))
+        array.push(lns, line.new(bar_index, p, bar_index + 1, p, color = color.new(color.green, 20), width = 1))
     if useSL
-        array.push(lbs, label.new(bar_index, eSL, "🛑SL: " + str.tostring(eSL, format.mintick), style = label.style_label_left, color = color.new(color.maroon, 0), textcolor = color.white, size = size.tiny))
-        array.push(lns, line.new(bar_index, eSL, bar_index + lineLen, eSL, color = color.red, style = line.style_dotted))
+        array.push(lbs, label.new(bar_index + 1, eSL, "🛑SL: " + str.tostring(eSL, format.mintick), style = label.style_label_left, color = lblBg, textcolor = color.new(color.red, 0), size = size.tiny))
+        array.push(lns, line.new(bar_index, eSL, bar_index + 1, eSL, color = color.new(color.red, 20), width = 1))
 
 // resolve open order + drawdown (adverse excursion, price points)
 if eOpen
@@ -184,6 +192,12 @@ if eOpen
     ddMax := math.max(ddMax, adverse)
     ddSum += adverse
     ddCnt += 1
+
+// grow only the CURRENT order's TP/SL lines + labels to the latest bar (until the next cross)
+if plotTP and eOpen and array.size(lns) > curStart
+    for i = curStart to array.size(lns) - 1
+        line.set_x2(array.get(lns, i), bar_index + 1)
+        label.set_x(array.get(lbs, i), bar_index + 1)
 
 winrate = ordersToday > 0 ? math.round(winsToday / ordersToday * 100) : 0
 ddAvg = ddCnt > 0 ? ddSum / ddCnt : 0.0

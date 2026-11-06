@@ -54,9 +54,10 @@ Values are then fit in Node: candidate MA types/lengths/smoothing, ATR length×m
 - **Fast EMA** = `ta.ema(ta.ema(close, 38), 10)`; **Slow EMA** = `ta.ema(ta.ema(close, 62), 10)` (Δ0.000 vs live plots).
 - **Signal** = EMA cross (bull = crossover → BUY, bear = crossunder → SELL).
 - **ATR bands** S1-3/R1-3 = basis ± `ATR(800)·{6,9,12}`.
-- **TP** = 3 equal steps of `ATR(100)·0.5`, stepped ±{1,2,3}; **SL** off by default (`useSL=false`), else `ATR(100)·1.5` opposite side.
+- **Entry** = OPEN of the cross bar (fitted exact, 3 signals).
+- **TP** = entry ± n·step, n=1,2,3, with **step = tpMultiplier(0.5) · 3 · ATR(100) on the CHART timeframe** (fitted 2026-11-06: ratio 1.497/1.498/1.498 over 3 signals, CV 0.0%; doubling tpMultiplier doubled the step). **SL** off by default (`useSL=false`), else entry ∓ `slMultiplier(1.5) · ATR(100)` (chart TF; verified by toggling useSL and slMultiplier on the original).
 - **RSI** 14 (close); MTF trend+RSI dashboard; daily event/stats table.
-- *Inferred, not byte-confirmed:* band basis EMA identity (≈Slow), literal ATR length 800, and the TP ATR reference timeframe (~15m via `request.security`).
+- *Inferred, not byte-confirmed:* band basis EMA identity (≈Slow), literal ATR length 800.
 
 ## Pine / TradingView workflow notes
 

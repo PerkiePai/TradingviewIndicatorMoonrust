@@ -29,3 +29,10 @@ The data window NAMES its own plots, so one snapshot exposes most of the archite
 
 ## Order-placement backtest (2026-11-06)
 Leave-one-session-out test of 180 entry and exit setups on `data/XAUUSD_EIGHTCAP_1m.csv` (4 sessions, about 58 signals), sized for a $24 account at 0.01 lot. Verdict: **no demonstrated edge**, which means unproven rather than proven bad. No setup is recommended. Rerun with `node scripts/backtest.mjs`; results are in `reports/moonrush-backtest.md`; design is in `docs/superpowers/specs/2026-11-06-moonrush-backtest-design.md`.
+
+## TP/SL formula — FITTED (2026-11-06)
+- Original inputs: `ATR For TP/SL`=100, `tpMultiplier`=0.5, `slMultiplier`=1.5 (ids in_35/36/37).
+- **TP step = tpMultiplier × 3 × ATR(100) on the chart timeframe** (NOT 15m). Fit: 49 variants (TF 1–60m × length 10–200) recorded at every cross; only ATR(100)@chart-TF fits all 3 observed signals (ratio 1.497/1.498/1.498, CV 0.0%). Probe: setting tpMultiplier 0.5→1 doubled the step (3.43→6.86), restored after.
+- **SL distance = slMultiplier × ATR(100)** (chart TF, no ×3): with SL on, 1.5 → 3.43 from entry, 3 → 6.86. Inputs restored to useSL=false / 1.5.
+- **Entry price = OPEN of the cross bar** (fitted: 0.000 error at 3 signals, 4046.88 / 4043.75 / 4056.66; close of the cross bar was off by up to 0.58, previous close by up to 0.08). Replica now matches entry+TP1-3 exactly.
+- Open: win/loss stats differ (replica books a win at TP1; original rule unknown).

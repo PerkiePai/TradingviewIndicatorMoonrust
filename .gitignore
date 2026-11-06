@@ -1,3 +1,5 @@
 node_modules/
 .env
 last-signal.json
+data
+reports
