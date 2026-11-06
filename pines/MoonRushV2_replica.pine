@@ -241,7 +241,7 @@ if showDash and barstate.islast
     putRow(dash, 8, "1d", tD, rD)
 
 // ================= Event / stats table =================
-var table ev = table.new(position.bottom_right, 1, 19, border_width = 1, bgcolor = color.new(color.black, 20))
+var table ev = table.new(position.bottom_left, 1, 19, border_width = 1, bgcolor = color.new(color.black, 20))
 evRow(row, txt) => table.cell(ev, 0, row, txt, text_color = color.white, text_size = size.small, text_halign = text.align_left)
 
 if showEvent and barstate.islast
